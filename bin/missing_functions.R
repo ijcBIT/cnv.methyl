@@ -230,7 +230,7 @@ make_Kc<-function(ss,cncols,fname){
     saveRDS(K_list,paste0(fname,"_Kc_list.rds"))
   }
   stopCluster(cl)
-  Ks<-as.data.frame(t(data.frame(cn=fnames(K_list),K=unlist(unname(K_list)))))
+  Ks<-as.data.frame(t(data.frame(cn=names(K_list),K=unlist(unname(K_list)))))
   writexl::write_xlsx(Ks, paste0(name,"_Ks.xlsx"))
 }
 

@@ -1,6 +1,8 @@
 ## Upload Copy Number Polymorphism file from Broad Inst. for their exclusion
 
-library("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+require("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+require("IlluminaHumanMethylationEPICanno.ilm10b2.hg19")
+
 file <- "../20211210CUP/raw/Data/CNV_Germline_GSITIC2_BROAD_SNP6.merged.151117.hg19.CNV.txt"
 cnvbroad <- read.delim(file,header=T,sep="\t")
 
@@ -19,7 +21,27 @@ seqnames(Exclude)
 data("CancerGenes")
 detail_region <- regioneR::toGRanges(CancerGenes)
 seqlevels(detail_region)
-anno <- conumee::CNV.create_anno(array_type = "450k",chrXY = F,
+
+#450k annotation:
+anno_450K <- conumee::CNV.create_anno(array_type = "450k",chrXY = F,
                         exclude_regions = Exclude, detail_regions = detail_region)
-#saveRDS(anno, "./data-raw/anno.rds")
-#usethis::use_data(anno, overwrite = TRUE,internal = TRUE)
+anno_450K@probes$Name <-IlluminaHumanMethylation450kanno.ilmn12.hg19::Other[names(anno_450K@probes),"UCSC_RefGene_Name"]
+#Epic annotation:
+anno_epic <- conumee::CNV.create_anno(array_type = "EPIC",chrXY = F,
+                                      exclude_regions = Exclude, detail_regions = detail_region)
+anno_epic@probes$Name <-IlluminaHumanMethylationEPICanno.ilm10b2.hg19::Other[names(anno_epic@probes),"UCSC_RefGene_Name"]
+#Overlap annotation:
+anno_overlap <- conumee::CNV.create_anno(array_type = "overlap",chrXY = F,
+                                      exclude_regions = Exclude, detail_regions = detail_region)
+cgs <- names(anno_overlap@probes)
+
+anno_overlap@probes$Name<-sapply(
+  unname(sapply(
+    paste0(anno_epic@probes[cgs,]$Name,";" ,anno_450K@probes[cgs,]$Name),
+    function(g) unique(strsplit(g, split = ";")[[1]])
+    )),function(x) paste(x,collapse = ";")
+  )
+rm("file","cnvbroad","cnvbroadgr","Exclude","CancerGenes")
+# mcols(anno_overlap@probes) <- [names(anno_overlap@probes),"UCSC_RefGene_Name"]
+# #saveRDS(anno, "./data-raw/anno.rds")
+# #usethis::use_data(anno, overwrite = TRUE,internal = TRUE)

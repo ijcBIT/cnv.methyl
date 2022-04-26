@@ -38,5 +38,5 @@ all_CN_ASCAT_raw <- data.table::rbindlist(DTlist)
 
 genenames<- setdiff(names(all_CN_ASCAT_raw),c("Project","barcodes","ASCAT.path"))
 empty_rows <- apply(all_CN_ASCAT_raw[,.SD,.SDcols=genenames],1,function(x)all(is.na(x)))
-all_CN_ASCAT<-all_CN_ASCAT[!(empty_rows),]
+all_CN_ASCAT<-all_CN_ASCAT_raw[!(empty_rows),]
 usethis::use_data(all_CN_ASCAT, overwrite = TRUE)

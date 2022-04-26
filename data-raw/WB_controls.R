@@ -49,6 +49,9 @@ for(GSM in GSM_males){
 }
 
 # Dump all  Male/ and Female/ dirs .idat files in WholeBlood_Controls.
-setwd("../../")
-
-#usethis::use_data(TrainingSet_Sample_sheet, overwrite = TRUE)
+# Load and combine all those and perform preprocessing:
+cgs<-names(anno_450K@probes)
+control<-readRDS("/data/SCNA/control.rds")
+idx<-rownames(control@intensity) %in% cgs
+control@intensity<-control@intensity[idx,]
+usethis::use_data(control, overwrite = TRUE)

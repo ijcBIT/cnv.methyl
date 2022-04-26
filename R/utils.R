@@ -22,35 +22,86 @@ check_input_files<-function(Sample_Name,folder,std_file="standard_format"){
   return(path)
 }
 
-get_int<-function(seg,ref_genes="all",cn_genes){
-  if(ref_genes=="all"){data("AllGenes");interest_geneset <- AllGenes}else if(
-    ref_genes == "paper"){data("CancerGenes");interest_geneset <- CancerGenes}else{
-      interest_geneset<-utils::read.table(ref_genes)}
-  interest_genes<-interest_geneset$name
+get_int<-function(seg,ref_genes="all",cn_genes,output_vars=c("UCSC_RefGene_Name"),arraytype="450K"){
+
+  #grset <- fdata(arraytype)
+
+  if(ref_genes=="all"){
+
+    interest_geneset <- fdata(arraytype)
+    interest_genes <- unique(do.call("c",sapply(grset$Name,function(g)unique(strsplit(g, split = ";")[[1]]))))
+    }
+  else if(ref_genes == "paper"){
+      data("CancerGenes")
+      interest_geneset <- CancerGenes
+      interest_genes<-interest_geneset$name
+    }
+  else{
+      interest_geneset<-utils::read.table(ref_genes)
+      interest_genes<-interest_geneset$name
+      }
   genes <- intersect(cn_genes,interest_genes)
   if(length(genes)<1){
     df<-data.frame(ID=NULL,Int=NULL,X=NULL,Var=NULL)
     warning("No genes of interest present in cnstate: ")
     return(df)
   }
-  #segb <- data.frame(chr=seg$chrom, start=seg$loc.start, end=seg$loc.end, log2r= seg$seg.mean)
-  #seggr <- regioneR::toGRanges(segb)
-
-
   old_names<-c("chrom","loc.start","loc.end","seg.mean")
   new_names<-c("chr","start","end","log2r")
   data.table::setnames(seg, old_names,new_names)
   data.table::setcolorder(seg,new_names)
   #cols<-colSums(is.na(seg))<1
   #seg<-seg[,.SD,.SDcols=cols]
+
+
   seggr <- regioneR::toGRanges(seg)
   grset <- regioneR::toGRanges(interest_geneset)
-  int <- suppressWarnings(SummarizedExperiment::findOverlaps(seggr,grset[grset$name %in% genes,]))
-  seggr.matched <- seggr[S4Vectors::queryHits(int)];
-  S4Vectors::mcols(seggr.matched) <- cbind.data.frame(
-    S4Vectors::mcols(seggr.matched),
-    S4Vectors::mcols(grset[grset$name%in%genes][S4Vectors::subjectHits(int)]));
-  int <- seggr.matched
+  fol <- suppressWarnings(SummarizedExperiment::findOverlaps(seggr,grset))
+  ag <- sapply(unique(S4Vectors::queryHits(fol)),function(x){
+     idx <- S4Vectors::subjectHits(fol)[S4Vectors::queryHits(fol) == x]
+     Name=paste(intersect(unique(grset[idx,]$Name),genes),collapse = ";")
+     #gsub("\\s", "", Name)
+   })
+  seggr.matched<-seggr[unique(S4Vectors::queryHits(fol))]
+  seggr.matched$gene.mame<-ag
+  }
+  #   seg[,var]
+  #   for (var in output_vars){
+  #     var <- grset[idx,var]
+  #
+  #   }
+  #   genes<-sapply(RefGene, function(g) strsplit(g, split = ";")[[1]])
+  #   genes<-unique(unlist(genes))
+  #   return(genes)
+  # })
+  #mol<- suppressWarnings(SummarizedExperiment::findOverlaps(seggr,grset))
+  # seggr.matched <- seggr[S4Vectors::queryHits(fol)];
+  # S4Vectors::mcols(seggr.matched) <- cbind.data.frame(
+  #   S4Vectors::mcols(seggr.matched),
+  #   S4Vectors::mcols(grset[S4Vectors::subjectHits(fol)]));
+  # int <- seggr.matched
   message("int finish")
   return(int)
 }
+
+
+fdata <- function(x = c("450K", "EPIC", "overlap")) {
+  out<-tryCatch(
+    {  match.arg(x)
+
+      switch(x,
+             "EPIC" = anno_epic@probes,
+             "450K" = anno_450K@probes,
+             "overlap" = anno_overlap@probes
+      )
+    },error=function(cond){
+      message(cond)
+      message("\n overlaping probes between 450K and epic will be used.")
+      return(anno_overlap@probes)
+    }
+  )
+  return(out)
+
+}
+
+

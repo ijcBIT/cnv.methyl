@@ -41,3 +41,15 @@ vignettes/*.pdf
 .Rproj.user
 .Rdata
 .DS_Store
+
+analysis/
+
+data-raw/CN_calls/
+
+*.tgz
+
+data-raw/Homo_sapiens.GRCh37.75.gtf
+
+data/control.rda
+
+Supplementary_table_S3.xlsx

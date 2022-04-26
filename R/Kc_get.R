@@ -1,6 +1,8 @@
 #' Set of functions to obtain Kc from reference copy number state.
 #' @param ID ID inside Sample sheet and in the Sample_Name.
 #' @param K Precalculated constants for each cn state.
+#' @param cn_genes genes known to be altered in the reference call from SNP
+#' for a given cnstate.
 #' @inheritParams Kc_make
 #' @return GRanges object of the genes of interest "ref_genes" and a cna column
 #' with the copy number alterations for each of them.

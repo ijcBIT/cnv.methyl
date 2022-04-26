@@ -6,7 +6,7 @@ library(data.table)
 library(readr)
 library(dplyr)
 library("GenomicFeatures")
-library("TxDb.Hsapiens.UCSC.hg19.knownGene")
+
 data("all_CN_ASCAT")
 file="Data/CancerGenes.csv"
 bed <- read.csv(file, stringsAsFactors = F)
@@ -16,9 +16,24 @@ common <- intersect(names(all_CN_ASCAT) , bed$name)
 genes <-all_CN_ASCAT[,.SD,.SDcols=c("Project","barcodes",common)]
 CancerGenes<-bed[bed$name %in% common,]
 usethis::use_data(CancerGenes,overwrite = T)
-
-
 writexl::write_xlsx(CancerGenes,"Supplementary_table_S3.xlsx")
+
+LOC450 = minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19::IlluminaHumanMethylation450kanno.ilmn12.hg19)
+FDATA450 = minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19::IlluminaHumanMethylation450kanno.ilmn12.hg19)
+mcols(LOC450)<-FDATA450
+LOC450$name<-
+# UCSC_refgenes <- strsplit(as.character(FDATA450$UCSC_RefGene_Name), split = ";")
+# UCSC_refgenes <- do.call("c",UCSC_refgenes)
+# UCSC_refgenes <- unique(UCSC_refgenes)
+
+
+
+
+
+
+
+
+
 #Generate genomic ranges df for full genes list of genes with ASCAT calls:
 all_genes<-names(all_CN_ASCAT)[-c(1:3)]                          #gene names
 genome <- TxDb.Hsapiens.UCSC.hg19.knownGene                      #ref genome
@@ -40,3 +55,22 @@ AllGenes<-data.frame(chr=seqnames(plec_gene)[!seqnames(plec_gene)%in%c("chrX","c
 
                      )
 usethis::use_data(AllGenes,overwrite = T)
+
+
+library(GenomicState)
+library(AnnotationDbi)
+
+
+txdb<-gencode_txdb(
+  version = "31",#hg19:25 to 31
+  genome = c( "hg19"),
+  chrs = paste0("chr", c(seq_len(22), "X", "Y", "M"))
+)
+genes(txdb)->g
+geneid<-g$gene_id
+egid <- AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db,
+                              all_genes, c("ENSEMBL"),"SYMBOL") #Annotation
+strtrim(g$gene_id,nchar(egid$ENSEMBL[1]))->g$gene_id
+ens_gene = g[which(g$gene_id %in% egid$ENSEMBL),]
+setdiff(CancerGenes$name , AllGenes$name)
+

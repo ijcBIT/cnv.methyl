@@ -9,7 +9,7 @@
 #' ss<-TrainingSet_Sample_sheet[1:14,]
 #' cnv_methyl(ss)
 #'
-cnv_methyl<-function(ss){
+cnv_methyl<-function(ss,ref_genes,outdir, Kc){
 
   intensity<-pre_process(ss)
   ss<-data.table::fread("analysis/ChAMP/Sample_Sheet.txt")
