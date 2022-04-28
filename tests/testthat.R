@@ -1,4 +1,4 @@
 library(testthat)
-library(SCNA)
+library(cnv.methyl)
 
-test_check("SCNA")
+test_check("cnv.methyl")

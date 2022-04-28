@@ -4,17 +4,23 @@
 \alias{idats_folder}
 \title{generate champ folder with all idats}
 \usage{
-idats_folder(targets, folder)
+idats_folder(targets, folder, ncores = NULL)
 }
 \arguments{
-\item{targets}{data.frame representing valid targets file as is
+\item{targets}{data.frame representing valid targets file as is}
+
+\item{folder}{workdir where to copy files
 used within the minfi package}
+
+\item{ncores}{cores}
 }
 \value{
 folder with idats
 }
 \description{
+DEPRECATED!
 prepare idats folder and targets csv in parallel using foreach
+Now part of read.metharray.exp.par
 }
 \author{
 izar de Villasante

@@ -12,6 +12,7 @@ run_conumee(
   Sample_Name = NULL,
   seg.folder = "Segments",
   log2r.folder = "log2r",
+  arraytype = "450K",
   conumee.folder = "analysis/CONUMEE/",
   probeid = "probeid"
 )
@@ -40,6 +41,8 @@ default = "Segments"}
 log2r values are the log2 ratio of the intensities(_GRN + _RED channel) between the
 query and the reference set (control) as returned by CNV.fit function from CONUMEE.
 default = "log2r"}
+
+\item{arraytype}{Methylation array type}
 
 \item{conumee.folder}{Parent working directory where you want to have your results.}
 

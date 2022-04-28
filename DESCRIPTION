@@ -1,19 +1,18 @@
-Package: SCNA
-Title: SCNA finds copy number alteration from methylation .idat files
+Package: cnv.methyl
+Title: cnv.methyl finds copy number alteration from methylation idat files
 Version: 0.0.0.9000
 Authors@R: 
     person("Izar", "de Villasante", "Llaquet", "idevillasante@carrerasresearch.org", role = c("aut", "cre"),
            comment = c(ORCID = "https://orcid.org/0000-0001-7325-0631 "))
-Description: What the package does (one paragraph).
+Description: The package implements an automatic and dynamic thresholding algorithm to find somatic copy number alterations in methylation arrays based on log2R intensities. It relies mostly on minfi for preprocessing and and conumee for segmentation. 
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
-Suggests: 
+Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Imports: 
-    ChAMP,
+Imports:
     conumee,
     pkgdown,
     minfi,
@@ -32,10 +31,9 @@ Imports:
     S4Vectors,
     rlang,
     IlluminaHumanMethylation450kanno.ilmn12.hg19,
-    writexl,
-    RFpurify,
     maxprobes,
-    Biobase
+    Biobase,
+    impute
 Depends: 
     R (>= 2.10)
 LazyData: true

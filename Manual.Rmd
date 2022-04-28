@@ -1,7 +1,9 @@
 ---
-title: "Data Acquisition"
+title: "cnv-methyl manual"
+subtitle: "A dynamic thresholding implementation of conumee for somatic copy number alterations."
 author: "Izar de Villasante"
-date: "12/10/2021"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+tags: [CNV,cnv,scna,SCNA,methylation,cnv-methyl,conumee,automatic-thresholding,automatic,thresholding,dynamic,array,methyl-array,450K,EPIC,epic,450k]
 output:
   pdf_document:
     highlight: pygments
@@ -17,11 +19,11 @@ header-includes:
 -  \usepackage{float} 
 - \usepackage{pdfpages}
 
-params:
-  TCGA_folder: "raw/TCGA/"  #"/raw/20211210CUP/3/"
-  train: "raw/20211210CUP/TrainingSet_Arrays/"
-  excel: "metadata/Samples_on_Array_20191213.xlsx"
-  dori: "/home/idevillasante/shares/BACKUP/#recycle/raw/Arrays/TheCancerGenomeAtlas"
+# params:
+#   TCGA_folder: "raw/TCGA/"  #"/raw/20211210CUP/3/"
+#   train: "raw/20211210CUP/TrainingSet_Arrays/"
+#   excel: "metadata/Samples_on_Array_20191213.xlsx"
+#   dori: "/home/idevillasante/shares/BACKUP/#recycle/raw/Arrays/TheCancerGenomeAtlas"
 
 
 ---

@@ -16,3 +16,7 @@ change log2R by cg terminology NOT AGREE
    '::' or ':::' imports not declared from:
      'Biobase' 'RFpurify' 'maxprobes' 'writexl'
 upload full controls list to github using git-lfs
+
+Manage ... extra arguments sent to minfi::read.metharray inside pre_process
+
+Try to recalculate Kc with numbers.

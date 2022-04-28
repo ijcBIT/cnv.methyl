@@ -1,7 +1,7 @@
 ## Sample sheet for 442 TCGA TrainingSet arrays.
 library(data.table)
 setDTthreads(0L)
-cdir<-"/data/SCNA/data-raw/TrainingSet_Arrays"
+cdir<-"/data/cnv.methyl/data-raw/TrainingSet_Arrays"
 ss_train<-TrainingSet_Sample_sheet <- fread("Data/Additional.File.2_TableS1.csv")
 setDT(TrainingSet_Sample_sheet)
 setkey(TrainingSet_Sample_sheet,"Sample_Name")

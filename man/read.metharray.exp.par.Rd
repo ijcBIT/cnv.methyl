@@ -9,14 +9,22 @@ read.metharray.exp.par(
   folder,
   verbose = TRUE,
   arraytype = "450K",
+  ncores = NULL,
   ...
 )
 }
 \arguments{
-\item{targets}{data.frame representing valid targets file as is
-used within the minfi package}
+\item{targets}{A sample sheet with the required fields for minfi to load files.}
+
+\item{folder}{this directory will be created as the combination of out
+and subf. if you save the csv file inside this folder it will be used by
+minfi::read.450k.sheet.}
 
 \item{verbose}{logical default TRUE}
+
+\item{arraytype}{Methylation array type}
+
+\item{ncores}{number of cores to use.}
 
 \item{...}{optional arguments to read.metharray.exp}
 }

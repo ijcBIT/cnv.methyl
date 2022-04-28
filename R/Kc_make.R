@@ -60,7 +60,8 @@ Kc_make<-function(ss,fname,cncols=c("Amp10","Amp","Gains","Hetloss","HomDel"),
   }
   parallel::stopCluster(cl)
   Ks<-as.data.frame(t(data.frame(cn=names(K_list),K=unlist(unname(K_list)))))
-  writexl::write_xlsx(Ks, paste0(fname,"_Ks.xlsx"))
+  #writexl::write_xlsx(Ks, paste0(fname,"_Ks.xlsx"))
+  write.table(Ks, paste0(fname,"_Ks.xlsx"))
 
 }
 

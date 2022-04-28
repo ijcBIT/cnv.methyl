@@ -7,17 +7,22 @@
 Kc_get(
   ID,
   ss,
+  ref_genes = "all",
   conumee.folder = "analysis/CONUMEE",
   seg.folder = "Segments",
   log2r.folder = "log2r",
-  K = list(Amp10 = 3.666485, Amp = 1.495666, Gains = 1.096756, HetLoss = -1.887569,
-    HomDel = -5.124848)
+  arraytype = "450K",
+  anno_file = NULL,
+  cn_genes = NULL,
+  Kc_method = "balanced"
 )
 }
 \arguments{
 \item{ID}{ID inside Sample sheet and in the Sample_Name.}
 
-\item{ss}{Sample sheet containing purities, cnstate and Sample_Name ids.}
+\item{ss}{sample sheet}
+
+\item{ref_genes}{Granges object with subset of genes to use for cnv analysis.}
 
 \item{conumee.folder}{Parent working directory where you want to have your results.}
 
@@ -30,13 +35,34 @@ log2r values are the log2 ratio of the intensities(_GRN + _RED channel) between 
 query and the reference set (control) as returned by CNV.fit function from CONUMEE.
 default = "log2r"}
 
-\item{K}{Precalculated constants for each cn state.}
+\item{arraytype}{Methylation array type}
+
+\item{anno_file}{anno file CNV.anno object saved as .rds. default
+CNV_Germline_GSITIC2_BROAD_SNP6.merged.151117.hg19.CNV.txt}
+
+\item{cn_genes}{Used to subset genes from the reference set. Needed in order
+to generate new Kc from a reference set, where cn_genes are previously known
+genes to be altered in a given cn_state. Otherwise use ref_genes.}
+
+\item{Kc_method}{Choose which Kc you want to use. Either "curated" or "balanced.
+The first comes from a list of 94 genes manually selected by experts and an
+uneven proportion of cancers. The second one comes from all genes and balanced
+proportion of cancer types. default= balanced}
+}
+\value{
+GRanges object of the genes of interest "ref_genes" and a cna column
+with the copy number alterations for each of them.
 }
 \description{
 Set of functions to obtain Kc from reference copy number state.
 }
 \examples{
 data("ss")
+ID="TCGA-19-A6J4-01A-11D-A33U-05"
+ss[Sample_Name==ID,]->ss
 cna<-Kc_get(ss=ss,ID="TCGA-19-A6J4-01A-11D-A33U-05")
 cna
+}
+\author{
+Izar de Villasante
 }

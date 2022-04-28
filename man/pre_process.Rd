@@ -8,16 +8,17 @@
 \usage{
 pre_process(
   targets,
-  purity = T,
+  purity = NULL,
   query = T,
   RGset = T,
-  out = "analysis/ChAMP/",
+  out = "analysis/intermediate/",
   subf = "IDATS/",
   folder = NULL,
+  ncores = NULL,
   arraytype = "450K"
 )
 
-purify(myLoad)
+purify(myLoad, knn = 5)
 
 queryfy(myLoad)
 }
@@ -42,10 +43,14 @@ Default = NULL}
 and subf. if you save the csv file inside this folder it will be used by
 minfi::read.450k.sheet.}
 
+\item{ncores}{number of cores to use.}
+
 \item{arraytype}{Methylation array type}
 
 \item{myLoad}{a RGset as returned by minfi::read.metharray.exp. will use this as basedir to
 load the idats. default is results/IDATS/.}
+
+\item{knn}{number of neighbors for knn algorithm}
 }
 \value{
 Log2r intensities ready to be analysed with conumee.
