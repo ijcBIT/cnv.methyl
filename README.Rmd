@@ -46,7 +46,7 @@ str(sample_sheet)
 head(sample_sheet)
 ```
 
-The main function is run_cnv.methyl that will perform the whole pipline from idats to GRanges object with gene and copy number alteration annotations:
+The main function is `run_cnv.methyl` that will perform the whole pipline from idats to GRanges object with gene and copy number alteration annotations:
 ```{r main function,cache=TRUE}
 library(cnv.methyl)
 out="analysis/example/"

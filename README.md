@@ -67,9 +67,9 @@ head(sample_sheet)
 #> 6 data/sample_IDATS/TCGA-LUSC/TCGA-63-A5MU-01A-11D-A26N-05/9305216121_R06C01
 ```
 
-The main function is run_cnv.methyl that will perform the whole pipline
-from idats to GRanges object with gene and copy number alteration
-annotations:
+The main function is `run_cnv.methyl` that will perform the whole
+pipline from idats to GRanges object with gene and copy number
+alteration annotations:
 
 ``` r
 library(cnv.methyl)
