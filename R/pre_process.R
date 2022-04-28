@@ -149,6 +149,7 @@ pre_process.myLoad <-function(targets,folder,arraytype="450K",ncores=NULL, ...) 
 #' @param knn number of neighbors for knn algorithm
 
 purify <- function(myLoad,knn=5){
+  requireNamespace("randomForest")
   sink(tempfile())
   on.exit(sink())
 
@@ -168,7 +169,7 @@ purify <- function(myLoad,knn=5){
 
 
     #cnv.methyl:::RFpurify_ABSOLUTE
-  absolute<-predict(RFpurify_ABSOLUTE, t(betas))
+  absolute<-stats::predict(RFpurify_ABSOLUTE, t(betas))
   #absolute <- RFpurify::predict_purity_betas(betas=betas,method="ABSOLUTE")
   return(absolute)
 }

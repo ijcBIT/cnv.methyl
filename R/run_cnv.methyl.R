@@ -70,7 +70,7 @@ run_cnv.methyl<-function(
   cl<- parallel::makePSOCKcluster(get_ncores(ncores), outfile="")
   doParallel::registerDoParallel(cl)
   res<-foreach::foreach(i=1:length(ss$Sample_Name),#isplitIndices(1400,chunks=ncores),
-                        .combine='list',
+                        .combine='c',
                         .multicombine = F,
                         .inorder=F,
                         .packages = "data.table",
