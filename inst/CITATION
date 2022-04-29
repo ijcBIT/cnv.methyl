@@ -1,0 +1,15 @@
+citHeader("To cite cnv.methyl in publications use:")
+
+citEntry(
+  entry    = "Manual",
+  title    = "cnv.methyl",
+  author   = "Izar de Villasante",
+  journal  = "Briefings of Bioinformatics",
+  year     = "2022",
+  institution = "josep carreras leukaemia research institute (IJC)",
+  department = "Bioinformatics Team (BIT)",
+  url      = "https://github.com/ijcBIT/cnv.methyl.git",
+  textVersion = paste(
+
+  )
+)

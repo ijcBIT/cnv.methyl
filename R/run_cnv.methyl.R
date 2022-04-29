@@ -57,10 +57,12 @@ run_cnv.methyl<-function(
   Sample_Name=NULL,ncores=NULL, seg.folder = "Segments", log2r.folder = "log2r",
   conumee.folder="analysis/CONUMEE/", probeid="probeid"){
 
-  anno<-get_anno(anno_file,arraytype=arraytype)
   intensity<-pre_process(targets = targets, purity=purity, RGset = RGset,
                          out=out,folder=folder,arraytype=arraytype)
+
+  anno<-get_anno(anno=anno_file,arraytype=arraytype)
   ss<-data.table::fread(paste0(out,"Sample_Sheet.txt"))
+
   run_conumee(intensities = intensity,anno_file=anno, ctrl_file=ctrl_file,
               Sample_Name=Sample_Name,seg.folder = seg.folder,
               log2r.folder = log2r.folder,arraytype=arraytype,

@@ -88,9 +88,9 @@ and scna for each of the genes
 Generate segment & log2r intensity files calculated by CONUMEE.
 }
 \examples{
-data("TrainingSet_Sample_sheet")
-t0<-Sys.time()
+#data("TrainingSet_Sample_sheet")
 #ss<-TrainingSet_Sample_sheet[60:200,]
+t0<-Sys.time()
 cnv<-cnv.methyl(targets=ss)
 t1<-Sys.time()
 cnv

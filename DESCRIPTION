@@ -1,5 +1,6 @@
 Package: cnv.methyl
 Title: cnv.methyl finds copy number alteration from methylation idat files
+Year: 2022
 Version: 0.0.0.9000
 Authors@R: 
     person("Izar", "de Villasante", "Llaquet", "idevillasante@carrerasresearch.org", role = c("aut", "cre"),

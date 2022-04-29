@@ -2,6 +2,7 @@
 % Please edit documentation in R/pre_process.R
 \name{pre_process}
 \alias{pre_process}
+\alias{pre_process.myLoad}
 \alias{purify}
 \alias{queryfy}
 \title{Pre-process methylation array data from (raw) .idat files to segment & log2r intensity files calculated by CONUMEE.}
@@ -17,6 +18,8 @@ pre_process(
   ncores = NULL,
   arraytype = "450K"
 )
+
+pre_process.myLoad(targets, folder, arraytype = "450K", ncores = NULL, ...)
 
 purify(myLoad, knn = 5)
 
@@ -47,6 +50,8 @@ minfi::read.450k.sheet.}
 
 \item{arraytype}{Methylation array type}
 
+\item{...}{optional arguments to read.metharray.exp}
+
 \item{myLoad}{a RGset as returned by minfi::read.metharray.exp. will use this as basedir to
 load the idats. default is results/IDATS/.}
 
@@ -54,13 +59,18 @@ load the idats. default is results/IDATS/.}
 }
 \value{
 Log2r intensities ready to be analysed with conumee.
+
+RGset
 }
 \description{
-Pre-process methylation array data from (raw) .idat files to segment & log2r intensity files calculated by CONUMEE.
+construct RGChannelSet in parallel using foreach
 }
 \examples{
 
 data("TrainingSet_Sample_sheet")
 ss<-TrainingSet_Sample_sheet[1:56,]
 pre_process(ss)
+}
+\author{
+izar de Villasante
 }

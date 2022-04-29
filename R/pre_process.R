@@ -27,15 +27,16 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="analysis/intermed
   #data('hm450.manifest.hg19')
   if (!is.character(folder)) folder<-paste0(out,subf)
   dir.create(folder,recursive=TRUE)
-  targets$Basename<-paste0(folder, basename(targets$Basename))
+  targets$Basename<-paste0(folder, basename(targets$filenames))
   myLoad<-pre_process.myLoad(targets,folder=folder, arraytype=arraytype,nocres=ncores)
   saveRDS(myLoad,paste0(out,"myLoad.rds"))
   targets<-SummarizedExperiment::colData(myLoad)
   if(is.null(purity)){
     purity<-purify(myLoad=myLoad)
     message("Rfpurifies")
-    targets$`Purity_Impute_RFPurify(Absolute)` <- purity
-    utils::write.table(targets,paste(out,"Sample_Sheet.txt",sep="/"), col.names = T, row.names = F, quote = F, sep="\t")
+    myLoad@colData$Purity_Impute_RFPurify<-purity
+    #targets$`Purity_Impute_RFPurify(Absolute)` <- purity
+    utils::write.table(myLoad@colData,paste(out,"Sample_Sheet.txt",sep="/"), col.names = T, row.names = F, quote = F, sep="\t")
     message(paste("targets is saved ",out))
   }
   if(query==T){
@@ -46,6 +47,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="analysis/intermed
     message("Pre-processing Completed successfully!")
     return(query)
   }
+
 }
 
 `%dopar%` <- foreach::`%dopar%`
@@ -105,10 +107,9 @@ idats_folder <- function(targets,folder,ncores=NULL){
 
 
 read.metharray.exp.par <- function(targets,folder, verbose = TRUE,arraytype="450K",ncores=NULL, ...) {
-  message("Reading multiple idat-files in parallel")
   #Make cluster:
   ncores<-get_ncores(ncores)
-  warning(ncores)
+  message("Reading multiple idat-files in parallel. Using ",ncores," cores.")
   cl<- parallel::makePSOCKcluster(ncores)
   doParallel::registerDoParallel(cl)
   res<-foreach::foreach(it=itertools::isplitIndices(nrow(targets), chunks=ncores),#isplitIndices(1400,chunks=ncores),
@@ -125,13 +126,22 @@ read.metharray.exp.par <- function(targets,folder, verbose = TRUE,arraytype="450
     fs::file_copy(paste0(subdf$filenames,"_Red.idat"),new_path=folder,overwrite=T)
     rgSet<-minfi::read.metharray.exp(targets = subdf, base=folder, ...)
     if(arraytype=="EPIC") rgSet@annotation <- c(array="IlluminaHumanMethylationEPIC",annotation="ilm10b4.hg19")
-
     return(rgSet)
   }
   parallel::stopCluster(cl)
   return(res)
 }
 
+#' construct RGChannelSet in parallel using foreach
+#'
+#'
+#' @title construct RGChannelSet in parallel
+#' @rdname pre_process
+#' @param ... optional arguments to read.metharray.exp
+#' @inheritParams run_cnv.methyl
+#' @return RGset
+#' @author izar de Villasante
+#' @export
 pre_process.myLoad <-function(targets,folder,arraytype="450K",ncores=NULL, ...) {
   message("working directory: ",folder)
   file.remove(list.files(folder, full.names = TRUE))
@@ -165,12 +175,7 @@ purify <- function(myLoad,knn=5){
         ]
       }
     )
-
-
-
-    #cnv.methyl:::RFpurify_ABSOLUTE
   absolute<-stats::predict(RFpurify_ABSOLUTE, t(betas))
-  #absolute <- RFpurify::predict_purity_betas(betas=betas,method="ABSOLUTE")
   return(absolute)
 }
 
@@ -181,28 +186,18 @@ purify <- function(myLoad,knn=5){
 
 queryfy<-function(myLoad){
   requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19")
-  #myLoad$rgSet #read.metharray(samps$Basename,force=T)
+  requireNamespace("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
   mSetSqn <- tryCatch( minfi::preprocessQuantile(myLoad),error=function(e) {message("failed")
     return(NULL)})
-
-  # calculate p-values
+  ##Percentage of faulty probes: more than 10% we throw samples away.
   detP <- minfi::detectionP(myLoad)
   bad <- colnames(detP)[colSums(detP >=0.01)/nrow(detP) > 0.1]
 
   ## Ensure probes are in the same order in the mSetSqn and detP objects
   detP <- detP[match(Biobase::featureNames(mSetSqn),rownames(detP)),]
-
   ## Remove rows with at elast one 'NA' entry
   keep <- rowSums(detP < 0.01) == ncol(mSetSqn)
-  #table(keep)
   mSetSqn <- mSetSqn[keep,]
-
-  ## If your data includes males and females, remove probes on the sex chromosomes
-  FDATA450 = minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19::IlluminaHumanMethylation450kanno.ilmn12.hg19)
-  keep <- !(featureNames(mSetSqn) %in% FDATA450$Name[FDATA450$chr %in% c("chrX","chrY")])
-  table(keep)
-  mSetSqn <- mSetSqn[keep,]
-
   ## Remove probes with SNPs at CpG site
   mSetSqn <- dropLociWithSnps(mSetSqn)
   mSetSqn <-  maxprobes::dropXreactiveLoci(mSetSqn)
