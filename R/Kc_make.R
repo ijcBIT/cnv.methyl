@@ -1,73 +1,89 @@
 #' Set of functions to obtain Kc from reference copy number state.
 #' @param ss Sample sheet containing purities, cnstate and Sample_Name ids.
-#' @param fname identifier for your Kc reference data used in the output names.
 #' @param cncols column names containing reference set of genes for each cn state
 #' @param ref_genes Granges object with subset of genes to use for cnv analysis.
 #' default = "paper"
-#' @inheritParams run_conumee
+#' @inheritParams run_cnv.methyl
+#' @inheritParams Kc_get
 #' @export
 #' @examples
+#' library(cnv.methyl)
 #' data("ss")
-#' Kc_make(ss=ss,fname="test",cncols=c("Amp","Amp10","Gains"))
+#' Kc_make(ss=ss,cncols=c("Amp","Amp10","Gains"))->a
 
-Kc_make<-function(ss,fname,cncols=c("Amp10","Amp","Gains","Hetloss","HomDel"),
-                  conumee.folder="analysis/CONUMEE",seg.folder = "Segments",
-                  log2r.folder = "log2r",ref_genes="paper"){
-  K_list<-list()
+Kc_make<-function(ss,arraytype=NULL,cncols=c("Amp10","Amp","Gains","HetLoss","HomDel"),
+                  segfile_folder = "analysis/CONUMEE/Segments", anno_file=NULL, ncores=NULL,
+                  log2rfile_folder = "analysis/CONUMEE/log2r", ref_genes="paper"){
+  # # Check params:
+  # bp_stopifnot("log2file must contain a valid path "             = is.character(log2file) & file.exists(log2file))
+  # bp_stopifnot("log2file must contain path to a single file"     = length(log2file)==1)
+  # bp_stopifnot("segfile must contain a valid path "              = is.character(segfile) & file.exists(segfile))
+  # bp_stopifnot("segfile must contain path to a single file"      = length(segfile)==1)
+  # bp_stopifnot("cn must be a valid column in sample_sheet "      = cn %in% names(ss))
+  #
+  # bp_stopifnot("sample_sheet must contain Sample_Name column"    = "Sample_Name" %in% names(ss))
+  # #bp_stopifnot("purities must be given in "    = any( sapply(names(ss),function(x)startsWith(x,"Purity_Impute_RFPurify") )))
+  # bp_stopifnot("ID must be of length 1"                  = length(ID)==1)
+  # bp_stopifnot("ID not found in Sample_Name column"      = ID %in% ss$Sample_Name)
+  #
+  # Prepare data:
+  anno<-get_anno(anno_file,arraytype)
   ss<-data.table::setDT(ss)
   data.table::setkey(ss,"Sample_Name")
-  segfile_folder <- paste0(conumee.folder,"/",seg.folder)
-  std_segfile <- rlang::expr(paste0(folder,ID,'_Segments.txt'))#rlang::expr(paste0(folder,"/","Segments_",ID,'.txt'))
-  ss$segfile <- check_input_files(Sample_Name = ss$Sample_Name,folder = segfile_folder, std_file = std_segfile)
-
-  log2rfile_folder <- paste0(conumee.folder,"/",log2r.folder)
-  std_log2rfile <- rlang::expr(paste0(folder,ID,'_log2r.txt'))
-  ss$log2file <- check_input_files(Sample_Name = ss$Sample_Name,folder = log2rfile_folder, std_file = std_log2rfile)
-
-  ncores<-parallel::detectCores()-2
-  if (!is.na(as.numeric(Sys.getenv("SLURM_CPUS_PER_TASK")))){
-    ncores=as.numeric(Sys.getenv("SLURM_CPUS_PER_TASK"))}
-  cl<- parallel::makePSOCKcluster(ncores, outfile="")
+  ss[,log2file:=check_input_files(Sample_Name = Sample_Name,folder = log2rfile_folder)]
+  ss[,segfile:= check_input_files(Sample_Name = Sample_Name,folder = segfile_folder)]
+  cols=paste0("K_",cncols)
+  cl<- parallel::makePSOCKcluster(get_ncores(ncores), outfile="")
+  parallel::clusterEvalQ(cl,{
+    library("data.table")
+    library("GenomicRanges")
+    library("cnv.methyl")
+  })
   doParallel::registerDoParallel(cl)
-  for (cnstate in cncols){
-    Kc_file<-paste0(fname,"_",cnstate,".rds")
-    if(file.exists(Kc_file)){K<-readRDS(Kc_file)}else{
-      scnas_file<-paste0("scnas_",fname,"_",cnstate,".rds")
-      #if(file.exists(scnas_file)){readRDS(scnas_file)}
-      all_scnas <-
-        foreach::foreach(ID=ss$Sample_Name,
-                .combine='c',
-                .inorder=FALSE,
-                .errorhandling = "pass",
-                .export=c("get_int","scna"),
-                .packages =c("data.table","regioneR")
-        ) %dopar% {
-          ID<-"TCGA-19-A6J4-01A-11D-A33U-05"
-          segfile <- ss[ID,segfile]#paste0(conumee.folder,"/",seg.folder,"/",ID,"_Segments.txt")
-          log2file <- ss[ID,log2file]#paste0(conumee.folder,"/",log2r.folder,"/",ID,"_log2r.txt")
-          ss<-ss[ID,]
-          scna(cn = cnstate, ID=ID,ss=ss,ref_genes=ref_genes,log2file = log2file,segfile = segfile)
-        }
-      saveRDS(all_scnas,scnas_file)
-      all_scnas<-all_scnas[stats::complete.cases(all_scnas),]
-      fit <-stats::lm(Var~0+I(X-Int),data=all_scnas)
-      coeff <- fit$coefficients
-      K=1/coeff
-      saveRDS(K,Kc_file)
-    }
-    K_list[[cnstate]]<-K
-    saveRDS(K_list,paste0(fname,"_Kc_list.rds"))
+
+  all_scnas<-foreach::foreach(ID=ss$Sample_Name, .inorder=FALSE, .errorhandling = "pass",
+                   .export=c("get_int"),.packages =c("data.table")
+  )%dopar%{
+    source("R/utils.R")
+    dt<-ss[Sample_Name==ID,]
+    std_log2rfile <- rlang::expr(paste0(folder=log2rfile_folder,ID,'_log2r.txt'))
+
+    suppressWarnings(Log2<-data.table::fread(dt$log2file,col.names = c("probeid","log2r")))
+    baseline <- mean(Log2$log2r, na.rm=T)
+    dt[Sample_Name == ID,Int:=baseline]
+    purity<-names(ss)[names(ss) %ilike% "impute" & names(ss) %ilike% "purity" ]
+    p<-ss[Sample_Name==ID,..purity]
+    Var <- p*sd(Log2$log2r,na.rm=T)
+    dt[Sample_Name == ID,Var:=unname(Var)]
+
+    seg<-data.table::fread(dt$segfile)
+    int<-get_int(seg=seg,ref_genes="all",cn_genes=NULL,arraytype="450K",anno=anno)@elementMetadata
+    scnas_mean <- sapply(cncols, function(cnstate){
+      cn_genes<-unique(strsplit(as.character(ss[Sample_Name == ID, ..cnstate]), split = ";"))[[1]]
+      X=mean(int$log2r[#Select rows where gene_name %in% cn_genes
+        sapply(int$gene.name,
+               function(x){ any(intersect(unique(strsplit(as.character(x), split = ";"))[[1]],cn_genes ) > 0) })
+        ])
+      return(X)
+    })
+    sc<-data.table::as.data.table(t(scnas_mean))
+    dt[Sample_Name == ID, (cols):= sc]
+    out<-dt[,.SD,.SDcols=c("Sample_Name","Int","Var",cols)]
+    #print(out)
+    return(out)
+
   }
   parallel::stopCluster(cl)
-  Ks<-as.data.frame(t(data.frame(cn=names(K_list),K=unlist(unname(K_list)))))
-  #writexl::write_xlsx(Ks, paste0(fname,"_Ks.xlsx"))
-  write.table(Ks, paste0(fname,"_Ks.xlsx"))
-
+  all_scnas<-do.call("rbind",all_scnas)
+   K=sapply(cols,function(x){
+     fit <-stats::lm(Var~0+I(get(x)-Int),data=all_scnas)
+     coeff <- unname(fit$coefficients)
+     K=1/coeff
+   })
+  return(K)
 }
 
-
-
-
+#' --- Deprecated! USe Kc_make ----
 #' Function to obtain mean intercept and variance from a
 #' reference gene set and a particular copy number state
 #' @param cn Sample sheet column name containing reference gene set for that cn.

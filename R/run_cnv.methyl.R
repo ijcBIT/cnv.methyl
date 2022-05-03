@@ -45,7 +45,7 @@
 #'
 #' @examples
 #' #data("TrainingSet_Sample_sheet")
-#' #ss<-TrainingSet_Sample_sheet[60:200,]
+#' #ss<-TrainingSet_Sample_sheet[1:56,]
 #' t0<-Sys.time()
 #' cnv<-cnv.methyl(targets=ss)
 #' t1<-Sys.time()
@@ -55,11 +55,12 @@ run_cnv.methyl<-function(
   targets,ref_genes="all",cn_genes=NULL, Kc_method, out="analysis/intermediate/",
   RGset=T, purity= NULL, arraytype="450K",folder=NULL, anno_file=NULL, ctrl_file='WB',
   Sample_Name=NULL,ncores=NULL, seg.folder = "Segments", log2r.folder = "log2r",
-  conumee.folder="analysis/CONUMEE/", probeid="probeid"){
+  conumee.folder="analysis/CONUMEE/", probeid="probeid",intensities=NULL){
 
+  if(!is.null(intensities)){intensity<-intensities}else{
   intensity<-pre_process(targets = targets, purity=purity, RGset = RGset,
                          out=out,folder=folder,arraytype=arraytype)
-
+  }
   anno<-get_anno(anno=anno_file,arraytype=arraytype)
   ss<-data.table::fread(paste0(out,"Sample_Sheet.txt"))
 
@@ -70,6 +71,10 @@ run_cnv.methyl<-function(
   # Cluster:
 
   cl<- parallel::makePSOCKcluster(get_ncores(ncores), outfile="")
+  parallel::clusterEvalQ(cl,{
+                         library("data.table")
+
+                         })
   doParallel::registerDoParallel(cl)
   res<-foreach::foreach(i=1:length(ss$Sample_Name),#isplitIndices(1400,chunks=ncores),
                         .combine='c',

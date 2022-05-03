@@ -6,39 +6,35 @@
 \usage{
 Kc_make(
   ss,
-  fname,
-  cncols = c("Amp10", "Amp", "Gains", "Hetloss", "HomDel"),
-  conumee.folder = "analysis/CONUMEE",
-  seg.folder = "Segments",
-  log2r.folder = "log2r",
+  arraytype = NULL,
+  cncols = c("Amp10", "Amp", "Gains", "HetLoss", "HomDel"),
+  segfile_folder = "analysis/CONUMEE/Segments",
+  anno_file = NULL,
+  ncores = NULL,
+  log2rfile_folder = "analysis/CONUMEE/log2r",
   ref_genes = "paper"
 )
 }
 \arguments{
 \item{ss}{Sample sheet containing purities, cnstate and Sample_Name ids.}
 
-\item{fname}{identifier for your Kc reference data used in the output names.}
+\item{arraytype}{Methylation array type}
 
 \item{cncols}{column names containing reference set of genes for each cn state}
 
-\item{conumee.folder}{Parent working directory where you want to have your results.}
-
-\item{seg.folder}{Subfolder inside results where segment files are saved.
-The segments are generated with CONUMEE CNV.segment(CNV.detail(CNV.bin(fit)))
-default = "Segments"}
-
-\item{log2r.folder}{Subfolder inside results where log2r values are saved.
-log2r values are the log2 ratio of the intensities(_GRN + _RED channel) between the
-query and the reference set (control) as returned by CNV.fit function from CONUMEE.
-default = "log2r"}
+\item{anno_file}{anno file CNV.anno object saved as .rds. default
+CNV_Germline_GSITIC2_BROAD_SNP6.merged.151117.hg19.CNV.txt}
 
 \item{ref_genes}{Granges object with subset of genes to use for cnv analysis.
 default = "paper"}
+
+\item{fname}{identifier for your Kc reference data used in the output names.}
 }
 \description{
 Set of functions to obtain Kc from reference copy number state.
 }
 \examples{
+library(cnv.methyl)
 data("ss")
-Kc_make(ss=ss,fname="test",cncols=c("Amp","Amp10","Gains"))
+Kc_make(ss=ss,cncols=c("Amp","Amp10","Gains"))->a
 }

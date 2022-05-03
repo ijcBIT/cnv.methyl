@@ -30,6 +30,8 @@ run_conumee<-function(intensities, anno_file=NULL, ctrl_file='WB', Sample_Name=N
   if(is.null(intensities) ){
     stop("Provide conumee with either a valid path to file or a data.frame with intensities",call. = F)
   }
+
+  bp_stopifnot("probeid must be a character string " = is.character(probeid))
   dir.create(conumee.folder,recursive=TRUE,showWarnings=FALSE)
   intensities<- read_intensity(infile = intensities,Sample_Name=Sample_Name,probeid=probeid)
   data.table::setkey(intensities,probeid)

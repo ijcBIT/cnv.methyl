@@ -2,7 +2,7 @@ cnv-methyl manual: dynamic Somatic Copy Nunmber Alterations for
 methylation array data.
 ================
 Izar de Villasante
-29 April 2022
+03 May 2022
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -342,14 +342,20 @@ cnv.methyl:::anno_overlap
 The right annotation will be chosen in each case according to the
 arraytype. If not specified it defaults to `anno_overlap`.
 
-If you are using the built-in controls and epic arrays as imput you
+If you are using the built-in controls and epic arrays as input you
 should change arraytype to overlap. The intensities can be given in the
 following formats:
 
 a genomics Ratio set or path to file. Accepted formats are: .fst, .rds,
 .txt or other text formats readable by fread.
 
+The output of `pre_process` function above with intensities from 20
+samples is used as example dataset:
+
 ``` r
+# 
+# intensity<-readRDS(system.file("extdata", "intensities.RDS",package="cnv.methyl"))
+# run_conumee(intensities=intensity,arraytype="450K")
 # run_conumee(intensities = intensity,anno_file=anno, ctrl_file=ctrl_file,
 #               Sample_Name=Sample_Name,seg.folder = seg.folder,
 #               log2r.folder = log2r.folder,arraytype=arraytype,

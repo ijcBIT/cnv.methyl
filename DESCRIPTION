@@ -26,7 +26,6 @@ Imports:
     itertools,
     BiocGenerics,
     data.table,
-    regioneR,
     SummarizedExperiment,
     IRanges,
     S4Vectors,
@@ -34,7 +33,10 @@ Imports:
     IlluminaHumanMethylation450kanno.ilmn12.hg19,
     maxprobes,
     Biobase,
-    impute
+    impute,
+    GenomicRanges,
+    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
+    randomForest
 Depends: 
     R (>= 2.10)
 LazyData: true

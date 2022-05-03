@@ -1,5 +1,5 @@
 bp_stopifnot = getFromNamespace("stopifnot", "backports")
-
+#`%dopar%` <- foreach::`%dopar%`
 check_input_files<-function(Sample_Name,folder,std_file="standard_format"){
 
   file_list<-list.files(folder,full.names = T)
@@ -43,8 +43,36 @@ Kc<-function(Kc=c("curated","balanced")){
   step=((KN[["10"]]-KN[["3"]])/7)
   KN[as.character(10+5)]=KN[[10]]+(step*5)
   KN[as.character(10+10)]=KN[[10]]+(step*10)
+  K$Diploid<-KN[["2"]]
   return(list(K,KN))
 }
+
+get_Tresholds<-function(ss,ID,log2rfile_folder,Kc_method="balanced"){
+  ss<-data.table::setDT(ss)
+  data.table::setkey(ss,"Sample_Name")
+  Kcs<-Kc(Kc_method)
+  K<-Kcs[[1]]
+  KN<-Kcs[[2]]
+  # Load log2r file and calculate baseline & Var.
+  std_log2rfile <- rlang::expr(paste0(folder=log2rfile_folder,ID,'_log2r.txt'))
+  log2file <- check_input_files(Sample_Name = ss$Sample_Name,folder = log2rfile_folder, std_file = std_log2rfile)
+  suppressWarnings(Log2<-data.table::fread(log2file,col.names = c("probeid","log2r")))
+  baseline <- mean(Log2$log2r, na.rm=T)
+  purity<-names(ss)[names(ss) %ilike% "impute" & names(ss) %ilike% "purity" ]
+  p<-ss[,..purity]
+  Var <- p*sd(Log2$log2r,na.rm=T)
+  # feature value threshold
+  Tresholds<-sapply(K, function(x) baseline + unname(x) * Var)
+  Tresholds<-unlist(unlist(Tresholds))
+  names(Tresholds)<-names(K)
+  # Numeric value threshold
+  TresholdsN<-sapply(KN, function(x) baseline + unname(x) * Var)
+  TresholdsN<-unlist(unlist(TresholdsN))
+  names(TresholdsN)<-names(KN)
+
+  return(list(K,KN))
+}
+
 get_int<-function(seg,ref_genes="all",cn_genes,output_vars=c("UCSC_RefGene_Name"),arraytype="450K",anno=NULL){
 
   if(ref_genes=="all"){
@@ -61,6 +89,7 @@ get_int<-function(seg,ref_genes="all",cn_genes,output_vars=c("UCSC_RefGene_Name"
   }
   if(is.null(cn_genes))cn_genes<-interest_genes
   genes <- intersect(cn_genes,interest_genes)
+  #print(genes)
   if(length(genes)<1){
     df<-data.frame(ID=NULL,Int=NULL,X=NULL,Var=NULL)
     warning("No genes of interest present in cnstate: ")
@@ -68,10 +97,10 @@ get_int<-function(seg,ref_genes="all",cn_genes,output_vars=c("UCSC_RefGene_Name"
   }
   old_names<-c("chrom","loc.start","loc.end","seg.mean")
   new_names<-c("chr","start","end","log2r")
-  data.table::setnames(seg, old_names,new_names)
+  data.table::setnames(seg, old_names,new_names,skip_absent = TRUE)
   data.table::setcolorder(seg,new_names)
-  seggr <- regioneR::toGRanges(seg)
-  grset <- regioneR::toGRanges(interest_geneset)
+  seggr <- GenomicRanges::makeGRangesFromDataFrame(seg,keep.extra.columns=TRUE)
+  grset <- GenomicRanges::makeGRangesFromDataFrame(interest_geneset,keep.extra.columns=TRUE)
   fol <- suppressWarnings(SummarizedExperiment::findOverlaps(seggr,grset))
   ag <- sapply(unique(S4Vectors::queryHits(fol)),function(x){
      idx <- S4Vectors::subjectHits(fol)[S4Vectors::queryHits(fol) == x]
@@ -79,7 +108,7 @@ get_int<-function(seg,ref_genes="all",cn_genes,output_vars=c("UCSC_RefGene_Name"
      #gsub("\\s", "", Name)
    })
   seggr.matched<-seggr[unique(S4Vectors::queryHits(fol))]
-  seggr.matched$gene.mame<-ag
+  seggr.matched$gene.name<-ag
   message("CN finish")
   return(seggr.matched)
 }

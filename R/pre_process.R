@@ -50,8 +50,6 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="analysis/intermed
 
 }
 
-`%dopar%` <- foreach::`%dopar%`
-
 #' DEPRECATED!
 #' prepare idats folder and targets csv in parallel using foreach
 #' Now part of read.metharray.exp.par

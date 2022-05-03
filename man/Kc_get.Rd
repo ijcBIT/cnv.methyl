@@ -8,9 +8,8 @@ Kc_get(
   ID,
   ss,
   ref_genes = "all",
-  conumee.folder = "analysis/CONUMEE",
-  seg.folder = "Segments",
-  log2r.folder = "log2r",
+  segfile_folder = "analysis/CONUMEE/Segments",
+  log2rfile_folder = "analysis/CONUMEE/log2r",
   arraytype = "450K",
   anno_file = NULL,
   cn_genes = NULL,
@@ -23,17 +22,6 @@ Kc_get(
 \item{ss}{sample sheet}
 
 \item{ref_genes}{Granges object with subset of genes to use for cnv analysis.}
-
-\item{conumee.folder}{Parent working directory where you want to have your results.}
-
-\item{seg.folder}{Subfolder inside results where segment files are saved.
-The segments are generated with CONUMEE CNV.segment(CNV.detail(CNV.bin(fit)))
-default = "Segments"}
-
-\item{log2r.folder}{Subfolder inside results where log2r values are saved.
-log2r values are the log2 ratio of the intensities(_GRN + _RED channel) between the
-query and the reference set (control) as returned by CNV.fit function from CONUMEE.
-default = "log2r"}
 
 \item{arraytype}{Methylation array type}
 
