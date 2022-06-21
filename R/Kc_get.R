@@ -9,15 +9,14 @@
 #' with the copy number alterations for each of them.
 #' @export
 #' @examples
-# # data("TrainingSet_Sample_sheet")
-#  # ss<-TrainingSet_Sample_sheet[1:20,]
-#' data(ss)
+#' data("ss")
 #' ID="TCGA-19-A6J4-01A-11D-A33U-05"
 #' ss[Sample_Name==ID,]->ss
 #' cna<-Kc_get(ss=ss,ID="TCGA-19-A6J4-01A-11D-A33U-05")
 #' cna
 
-
+# # data("TrainingSet_Sample_sheet")
+#  # ss<-TrainingSet_Sample_sheet[1:20,]
 
 
 Kc_get<-function(

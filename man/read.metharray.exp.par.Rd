@@ -23,13 +23,22 @@ read.metharray.exp.par(
 and subf. if you save the csv file inside this folder it will be used by
 minfi::read.450k.sheet.}
 
-\item{verbose}{logical default TRUE}
+\item{files}{Files}
+
+\item{copy}{Change to TRUE if you want to copy files to idats folder.
+Useful when working in HPC and idats are in ISILON.}
+
+\item{verbose}{Should the function be verbose?}
 
 \item{arraytype}{Methylation array type}
 
 \item{ncores}{number of cores to use.}
 
-\item{...}{optional arguments to read.metharray.exp}
+\item{extended}{Should a \code{RGChannelSet} or a
+    \code{RGChannelSetExtended} be returned. }
+
+\item{force}{Should reading different size IDAT files be forced? See
+    Details.}
 }
 \value{
 RGset

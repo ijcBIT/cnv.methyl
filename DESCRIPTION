@@ -1,42 +1,46 @@
 Package: cnv.methyl
 Title: cnv.methyl finds copy number alteration from methylation idat files
-Year: 2022
 Version: 0.0.0.9000
 Authors@R: 
-    person("Izar", "de Villasante", "Llaquet", "idevillasante@carrerasresearch.org", role = c("aut", "cre"),
+    person(c("Izar", "Llaquet"), "de Villasante", , "idevillasante@carrerasresearch.org", role = c("aut", "cre"),
            comment = c(ORCID = "https://orcid.org/0000-0001-7325-0631 "))
-Description: The package implements an automatic and dynamic thresholding algorithm to find somatic copy number alterations in methylation arrays based on log2R intensities. It relies mostly on minfi for preprocessing and and conumee for segmentation. 
+Description: The package implements an automatic and dynamic thresholding
+    algorithm to find somatic copy number alterations in methylation
+    arrays based on log2R intensities. It relies mostly on minfi for
+    preprocessing and and conumee for segmentation.
 License: GPL (>= 3)
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+Depends: 
+    R (>= 2.10)
+Imports:
+    Biobase,
+    BiocGenerics,
+    conumee,
+    data.table,
+    doParallel,
+    foreach,
+    fs,
+    fst,
+    GenomicRanges,
+    IlluminaHumanMethylation450kanno.ilmn12.hg19,
+    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
+    impute,
+    IRanges,
+    itertools,
+    maxprobes,
+    methods,
+    minfi,
+    parallel,
+    pkgdown,
+    randomForest,
+    rlang,
+    S4Vectors,
+    SummarizedExperiment,
+    utils
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Imports:
-    conumee,
-    pkgdown,
-    minfi,
-    utils,
-    fst,
-    fs,
-    parallel,
-    doParallel,
-    foreach,
-    itertools,
-    BiocGenerics,
-    data.table,
-    SummarizedExperiment,
-    IRanges,
-    S4Vectors,
-    rlang,
-    IlluminaHumanMethylation450kanno.ilmn12.hg19,
-    maxprobes,
-    Biobase,
-    impute,
-    GenomicRanges,
-    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
-    randomForest
-Depends: 
-    R (>= 2.10)
+Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Year: 2022

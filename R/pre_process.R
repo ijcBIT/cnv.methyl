@@ -10,6 +10,7 @@
 #' @param folder this directory will be created as the combination of out
 #'  and subf. if you save the csv file inside this folder it will be used by
 #'   minfi::read.450k.sheet.
+#' @param files Files
 #' @param RGset Whether you want normalised "RGChannelSet" or
 #' "RGChannelSetExtended" to be saved or not. path=out
 #' @param arraytype Methylation array type
@@ -113,6 +114,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
 #'
 
 #' @inheritParams run_cnv.methyl
+#' @inheritParams pre_process
 #' @return RGset
 #' @author izar de Villasante
 #' @export
@@ -170,7 +172,7 @@ read.metharray.exp.par <- function(targets,folder,files,copy=FALSE, verbose = TR
 #'
 #' @title construct RGChannelSet in parallel
 #' @rdname pre_process
-#' @param ... optional arguments to read.metharray.exp
+# #' @param ... optional arguments to read.metharray.exp
 #' @inheritParams run_cnv.methyl
 #' @return RGset
 #' @author izar de Villasante

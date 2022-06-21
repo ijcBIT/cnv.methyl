@@ -65,12 +65,12 @@ minfi::read.450k.sheet.}
 \item{copy}{Change to TRUE if you want to copy files to idats folder.
 Useful when working in HPC and idats are in ISILON.}
 
+\item{files}{Files}
+
 \item{myLoad}{a RGset as returned by minfi::read.metharray.exp. will use this as basedir to
 load the idats. default is results/IDATS/.}
 
 \item{knn}{number of neighbors for knn algorithm}
-
-\item{...}{optional arguments to read.metharray.exp}
 }
 \value{
 Log2r intensities ready to be analysed with conumee.
