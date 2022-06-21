@@ -199,17 +199,17 @@ purify <- function(myLoad,knn=5){
   on.exit(sink())
 
   betas<- minfi::getBeta(myLoad)
+  betas <- betas[
+    match(rownames(RFpurify_ABSOLUTE$importance), rownames(betas))
+    ,
+    , drop = FALSE
+  ]
   betas<-tryCatch(
     {betas<-impute::impute.knn(data = betas, k=knn)$data},
-    error={ betas<-betas[stats::complete.cases(betas),]},
-    finally ={
-      betas <- betas[
-        match(rownames(RFpurify_ABSOLUTE$importance), rownames(betas))
-        ,
-        , drop = FALSE
-        ]
-      }
+    error={ betas[is.na(betas)]<-mean(betas,na.rm=T)}
+
     )
+
   absolute<-stats::predict(RFpurify_ABSOLUTE, t(betas))
   return(absolute)
 }
