@@ -23,6 +23,10 @@ Kc_get(
 
 \item{ref_genes}{Granges object with subset of genes to use for cnv analysis.}
 
+\item{segfile_folder}{Path to folder with segmentation files.}
+
+\item{log2rfile_folder}{Path to folder with intensities files.}
+
 \item{arraytype}{Methylation array type}
 
 \item{anno_file}{anno file CNV.anno object saved as .rds. default
@@ -45,8 +49,7 @@ with the copy number alterations for each of them.
 Set of functions to obtain Kc from reference copy number state.
 }
 \examples{
-#data("TrainingSet_Sample_sheet")
-#ss<-TrainingSet_Sample_sheet[60:200,]
+data(ss)
 ID="TCGA-19-A6J4-01A-11D-A33U-05"
 ss[Sample_Name==ID,]->ss
 cna<-Kc_get(ss=ss,ID="TCGA-19-A6J4-01A-11D-A33U-05")

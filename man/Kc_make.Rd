@@ -22,13 +22,17 @@ Kc_make(
 
 \item{cncols}{column names containing reference set of genes for each cn state}
 
+\item{segfile_folder}{Path to folder with segmentation files.}
+
 \item{anno_file}{anno file CNV.anno object saved as .rds. default
 CNV_Germline_GSITIC2_BROAD_SNP6.merged.151117.hg19.CNV.txt}
 
+\item{ncores}{number of cores to use.}
+
+\item{log2rfile_folder}{Path to folder with intensities files.}
+
 \item{ref_genes}{Granges object with subset of genes to use for cnv analysis.
 default = "paper"}
-
-\item{fname}{identifier for your Kc reference data used in the output names.}
 }
 \description{
 Set of functions to obtain Kc from reference copy number state.

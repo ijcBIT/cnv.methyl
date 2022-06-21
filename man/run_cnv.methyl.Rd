@@ -21,7 +21,8 @@ run_cnv.methyl(
   seg.folder = "Segments",
   log2r.folder = "log2r",
   conumee.folder = "analysis/CONUMEE/",
-  probeid = "probeid"
+  probeid = "probeid",
+  intensities = NULL
 )
 }
 \arguments{

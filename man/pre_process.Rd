@@ -12,14 +12,23 @@ pre_process(
   purity = NULL,
   query = T,
   RGset = T,
-  out = "analysis/intermediate/",
+  out = "./analysis/intermediate/",
+  idats_folder = NULL,
   subf = "IDATS/",
   folder = NULL,
   ncores = NULL,
-  arraytype = "450K"
+  arraytype = "450K",
+  copy = FALSE
 )
 
-pre_process.myLoad(targets, folder, arraytype = "450K", ncores = NULL, ...)
+pre_process.myLoad(
+  targets,
+  folder,
+  arraytype = "450K",
+  ncores = NULL,
+  files = NULL,
+  copy = FALSE
+)
 
 purify(myLoad, knn = 5)
 
@@ -40,6 +49,9 @@ Default=TRUE}
 \item{out}{Results folder to store the normalized and clean RGset.
 Default = NULL}
 
+\item{idats_folder}{Folder containing idats. It will try to guess which idat
+belongs to which row in the targets data.frame.}
+
 \item{subf}{Subfolder inside results folder where IDAT files will be copied.}
 
 \item{folder}{this directory will be created as the combination of out
@@ -50,12 +62,15 @@ minfi::read.450k.sheet.}
 
 \item{arraytype}{Methylation array type}
 
-\item{...}{optional arguments to read.metharray.exp}
+\item{copy}{Change to TRUE if you want to copy files to idats folder.
+Useful when working in HPC and idats are in ISILON.}
 
 \item{myLoad}{a RGset as returned by minfi::read.metharray.exp. will use this as basedir to
 load the idats. default is results/IDATS/.}
 
 \item{knn}{number of neighbors for knn algorithm}
+
+\item{...}{optional arguments to read.metharray.exp}
 }
 \value{
 Log2r intensities ready to be analysed with conumee.

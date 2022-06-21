@@ -2,7 +2,8 @@
 % Please edit documentation in R/Kc_make.R
 \name{scna}
 \alias{scna}
-\title{Function to obtain mean intercept and variance from a
+\title{--- Deprecated! USe Kc_make ----
+Function to obtain mean intercept and variance from a
 reference gene set and a particular copy number state}
 \usage{
 scna(ID, log2file, segfile, ss, cn, ref_genes = "all")
@@ -27,6 +28,7 @@ default = "paper"}
 dataframe with input data for linear model. Int, mean and Var .
 }
 \description{
+--- Deprecated! USe Kc_make ----
 Function to obtain mean intercept and variance from a
 reference gene set and a particular copy number state
 }

@@ -7,10 +7,13 @@
 read.metharray.exp.par(
   targets,
   folder,
+  files,
+  copy = FALSE,
   verbose = TRUE,
   arraytype = "450K",
   ncores = NULL,
-  ...
+  extended = FALSE,
+  force = FALSE
 )
 }
 \arguments{
