@@ -112,6 +112,50 @@ get_int<-function(seg,ref_genes="all",cn_genes,output_vars=c("UCSC_RefGene_Name"
   message("CN finish")
   return(seggr.matched)
 }
+
+.default.27k.annotation  <- "ilmn12.hg19"
+.default.450k.annotation <- "ilmn12.hg19"
+.default.epic.annotation <- "ilm10b4.hg19"
+.default.allergy.annotation <- "ilm10.hg19"
+.metharray.types <- c("IlluminaHumanMethylation450k",
+                      "IlluminaHumanMethylationEPIC",
+                      "IlluminaHumanMethylation27k",
+                      "IlluminaHumanMethylationAllergy",
+                      "HorvathMammalMethylChip40")
+
+.guessArrayTypes <- function(nProbes) {
+  if (nProbes >= 622000 && nProbes <= 623000) {
+    arrayAnnotation <- c(
+      array = "IlluminaHumanMethylation450k",
+      annotation = .default.450k.annotation)
+  } else if (nProbes >= 1050000 && nProbes <= 1053000) {
+    # NOTE: "Current EPIC scan type"
+    arrayAnnotation <- c(
+      array = "IlluminaHumanMethylationEPIC",
+      annotation = .default.epic.annotation)
+  } else if (nProbes >= 1032000 && nProbes <= 1033000) {
+    # NOTE: "Old EPIC scan type"
+    arrayAnnotation <- c(
+      array = "IlluminaHumanMethylationEPIC",
+      annotation = .default.epic.annotation)
+  } else if (nProbes >= 54000 && nProbes <= 56000) {
+    arrayAnnotation <- c(
+      array = "IlluminaHumanMethylation27k",
+      annotation = .default.27k.annotation)
+  } else if (nProbes >= 41000 & nProbes <= 41100) {
+    arrayAnnotation <- c(
+      array = "HorvathMammalMethylChip40",
+      annotation = "test.unknown")
+  } else if (nProbes >= 43650 & nProbes <= 43680) {
+    arrayAnnotation <- c(
+      array = "IlluminaHumanMethylationAllergy",
+      annotation = .default.allergy.annotation)
+  } else {
+    arrayAnnotation <- c(array = "Unknown", annotation = "Unknown")
+    warning("Unable to detect Array type")
+  }
+  arrayAnnotation
+}
 get_anno <- function(x = c("450K", "EPIC", "overlap"),anno=NULL) {
   if(!is.null(anno)){
 

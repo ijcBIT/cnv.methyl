@@ -28,15 +28,23 @@
 #' ss<-TrainingSet_Sample_sheet[1:56,]
 #' pre_process(ss)
 
-pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/intermediate/",idats_folder=NULL,subf="IDATS/",folder=NULL,ncores=NULL,arraytype="450K",copy=FALSE){
+pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/intermediate/",
+                      idats_folder=NULL,subf="IDATS/",folder=NULL,ncores=NULL,arraytype=NULL,
+                      copy=FALSE,frac=0.1,pval=0.01,remove_sex=TRUE){
   #data('hm450.manifest.hg19')
   if (!is.character(folder)) folder<-paste0(out,subf)
   dir.create(folder,recursive=TRUE)
   if (!is.null(targets)) {
+    if (!"Sample_Name" %in% names(targets)) {
+      stop("targets must contain Sample_Names column with unique identifier of each sample")
+    }else{
+      if(any(duplicated(targets$Sample_Name)))stop("Sample_Name can't be repeated")
+    }
+
     if (!"Basename" %in% names(targets)) {
-      warning("Need 'Basename' amongst the column names of 'targets', will construct from idats.folder")
+      warning("Need 'Basename' amongst the column names of 'targets', will construct from idats_folder")
       if(is.null(idats_folder)){
-        stop("Either provide Basename or a valid idats.foler in order to continue" )
+        stop("Either provide Basename or a valid idats_folder in order to continue" )
       }else{
         base<-idats_folder
         Grn.files <- list.files(path = base, pattern = "_Grn.idat$",
@@ -84,10 +92,16 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
     stop("Must provide a 'targets' data.frame in order to continue")
   }
 
-
+  # Read idats and generate rgSet with metadata:
   myLoad<-pre_process.myLoad(targets,folder=folder, files=files, arraytype=arraytype,copy=copy, ncores=ncores)
   saveRDS(myLoad,paste0(out,"myLoad.rds"))
-  #targets<-SummarizedExperiment::colData(myLoad)
+  # Qc:
+  qc_folder<-paste0(out,"/QC/")
+  dir.create(normalizePath(qc_folder),showWarnings = F)
+  g<-  c("Sample_Group","Group","Type","Condition","Category")[ c("Sample_Group","Group","Type","Condition","Category") %in% colnames(targets)]
+  g<-g[1]
+  qc(myLoad,rgSet = ,sampGroups = g,sampNames = "Sample_Name")
+
   if(is.null(purity)){
     purity<-purify(myLoad=myLoad)
     message("Rfpurifies")
@@ -97,7 +111,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
     message(paste("targets is saved ",out))
   }
   if(query==T){
-    query <- queryfy(myLoad)
+    query <- queryfy(myLoad,arraytype=arraytype,frac=frac,pval=pval,remove_sex=remove_sex)
     if (RGset==T){
       saveRDS(query,paste0(out,"/intensities.rds"),compress = FALSE)
     }
@@ -130,11 +144,12 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
 
 
 
-read.metharray.exp.par <- function(targets,folder,files,copy=FALSE, verbose = TRUE, arraytype="450K",ncores=NULL, extended = FALSE, force =FALSE){
+read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose = TRUE, arraytype=NULL,ncores=NULL, extended = FALSE, force =FALSE){
   #Make cluster:
+  if(is.null(files)) files<- targets$Basename
   ncores<-get_ncores(ncores)
   message("Reading multiple idat-files in parallel. Using ",ncores," cores.")
-  cl<- parallel::makePSOCKcluster(ncores)
+  cl<- parallel::makePSOCKcluster(ncores,outfile="")
   doParallel::registerDoParallel(cl)
   if (copy ==TRUE){
     files<-paste0(folder,basename(targets$Basename))
@@ -149,13 +164,16 @@ read.metharray.exp.par <- function(targets,folder,files,copy=FALSE, verbose = TR
     requireNamespace(c("minfi","fs"))
     subdf<-as.data.frame(targets[it,])
     if (copy ==TRUE){
-      fs::file_copy(paste0(subdf$filenames,"_Grn.idat"),new_path=folder,overwrite = T)
-      fs::file_copy(paste0(subdf$filenames,"_Red.idat"),new_path=folder,overwrite=T)
+      fs::file_copy(paste0(subdf$Basename,"_Grn.idat"),new_path=folder,overwrite = T)
+      fs::file_copy(paste0(subdf$Basename,"_Red.idat"),new_path=folder,overwrite=T)
 
     }
 
     rgSet<-minfi::read.metharray(basenames = files[it], extended = extended, verbose = verbose, force =force)
-    if(arraytype=="EPIC") rgSet@annotation <- c(array="IlluminaHumanMethylationEPIC",annotation="ilm10b4.hg19")
+    if(arraytype=="EPIC") {rgSet@annotation <- c(array="IlluminaHumanMethylationEPIC",annotation="ilm10b4.hg19")}
+    else if (arraytype=="450K"){rgSet@annotation <- c(array="IlluminaHumanMethylation450k",annotation="ilmn12.hg19")
+
+    }else{rgSet@annotation<-.guessArrayTypes(nrow(rgSet))}
     return(rgSet)
   }
   parallel::stopCluster(cl)
@@ -184,7 +202,33 @@ pre_process.myLoad <-function(targets,folder,arraytype="450K",ncores=NULL, files
   utils::write.csv(targets,paste0(folder,"/Sample_sheet.csv"))
   myLoad <- read.metharray.exp.par(targets=targets,files=files,folder = folder,arraytype=arraytype,ncores=ncores,copy=copy)
   message("Minfi does load data")
+
   return(myLoad)
+}
+
+#' Generate Qc reports
+#'
+#'
+#' @title construct RGChannelSet in parallel
+#' @rdname pre_process
+#' @param qc_folder Path to location where qc_report and plot will be saved.
+#' @inheritParams minfi::qcReport
+#' @return Qc plots
+#' @author izar de Villasante
+#' @export
+#'
+qc <- function(rgSet,sampGroups="Sample_Group", sampNames= "Sample_Name",qc_folder="analysis/intermediate/QC/"){
+  minfi::qcReport(rgSet = rgSet,
+           pdf = paste0(qc_folder,"Report.pdf"),
+           sampGroups = myLoad@colData[sampGroups],
+           sampNames = myLoad@colData[sampNames])
+  mSet <- minfi::preprocessRaw(myLoad)
+  qc   <- minfi::getQC(mSet)
+  pdf(file = paste0(qc_folder,"mean_qc.pdf"),   # The directory you want to save the file in
+      width = 7, # The width of the plot in inches
+      height = 7) # The height of the plot in inches
+  minfi::plotQC(qc)
+  dev.off()
 }
 
 #' @export
@@ -217,26 +261,58 @@ purify <- function(myLoad,knn=5){
 #' @export
 #' @rdname pre_process
 #' @param out Results folder to store the normalized and clean RGset.
-#' Default = NULL
+#' @param frac Fraction of faulty probes (P-value > pval ) allowed. default 0.1
+#' @param pval P-value cutoff. default 0.01
+#' @param remove_sex Boolean. Should sex chromosomes be removed? default = TRUE
+#' @return Normalized & filtered RGset.
 
-queryfy<-function(myLoad){
+queryfy<-function(myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL){
   requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19")
   requireNamespace("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
-  mSetSqn <- tryCatch( minfi::preprocessQuantile(myLoad),error=function(e) {message("failed")
-    return(NULL)})
-  ##Percentage of faulty probes: more than 10% we throw samples away.
-  detP <- minfi::detectionP(myLoad)
-  bad <- colnames(detP)[colSums(detP >=0.01)/nrow(detP) > 0.1]
 
-  ## Ensure probes are in the same order in the mSetSqn and detP objects
-  detP <- detP[match(Biobase::featureNames(mSetSqn),rownames(detP)),]
-  ## Remove rows with at elast one 'NA' entry
-  keep <- rowSums(detP < 0.01) == ncol(mSetSqn)
-  mSetSqn <- mSetSqn[keep,]
-  ## Remove probes with SNPs at CpG site
-  mSetSqn <- dropLociWithSnps(mSetSqn)
+  # Check quality of the combined probe signal (testing against negative controls)
+  # 1. Remove low quality samples. Defaults more than 10% we throw samples away.
+  detP <- minfi::detectionP(myLoad, type = "m+u")
+  pdf(file = paste0(qc_folder,"mean_detection_pvalues.pdf"),width = 7,height = 7)
+  barplot(colMeans(detP),
+          names = targets$Sample_Name,
+          las = 2, cex.names = 0.8,
+          main = "Mean detection p-values")
+  dev.off()
+
+  bad <- colnames(detP)[colSums(detP >=pval)/nrow(detP) > frac]
+  if(length(bad)>0){
+    warning("The following samples will be discarded since they fail to pass the p-value filter ( ",
+            frac*100,"% of the probes with p-val >", pval, "): \n ", paste(bad,collapse = ", " ))
+    myLoad <- myLoad[,setdiff(colnames(detP),bad)]
+    }else{
+    cat("All samples passed detection P-value filter")
+  }
+
+  # 2. Preprocessing using Noob normalization method
+  mSetSqn <- minfi::preprocessNoob(myLoad)
+
+  # 3. Removing low-quality probes (with p-value below pval)
+  mSetSqn <- mSetSqn[rowSums(detP < pval) == ncol(mSetSqn),]
+
+  # 4. Removing probes with known SNPs at CpG site
+  mSetSqn <- minfi::dropLociWithSnps(minfi::mapToGenome(mSetSqn))
+
+  # 5. Removing cross reactive probes
   mSetSqn <-  maxprobes::dropXreactiveLoci(mSetSqn)
+
+  # 6. Sex. prediction & removal
+  mSetSqn$Sex_pred <- minfi::getSex(mSetSqn, cutoff = -2)$predictedSex
+  if(remove_sex){
+    if(!is.null(array_type)){anno<-get_anno(array_type)
+    }else{
+      anno<-minfi::getAnnotation(mSetSqn)
+      anno<-anno[!(anno$chr %in% c("chrX","chrY")),]
+    }
+    mSetSqn[rownames(anno),]
+  }
   return(mSetSqn)
+
   # mSetSqn <- CNV.load(mSetSqn)
   # return(mSetSqn@intensity)
 }
