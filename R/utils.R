@@ -123,7 +123,7 @@ get_int<-function(seg,ref_genes="all",cn_genes,output_vars=c("UCSC_RefGene_Name"
                       "IlluminaHumanMethylationAllergy",
                       "HorvathMammalMethylChip40")
 
-.guessArrayTypes <- function(nProbes) {
+guessArrayTypes <- function(nProbes) {
   if (nProbes >= 622000 && nProbes <= 623000) {
     arrayAnnotation <- c(
       array = "IlluminaHumanMethylation450k",

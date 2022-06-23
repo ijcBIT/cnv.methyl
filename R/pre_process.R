@@ -144,12 +144,12 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
 
 
 
-read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose = TRUE, arraytype=NULL,ncores=NULL, extended = FALSE, force =FALSE){
+read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose = TRUE, arraytype = NULL, ncores=NULL, extended = FALSE, force = FALSE){
   #Make cluster:
   if(is.null(files)) files<- targets$Basename
   ncores<-get_ncores(ncores)
   message("Reading multiple idat-files in parallel. Using ",ncores," cores.")
-  cl<- parallel::makePSOCKcluster(ncores,outfile="")
+  cl<- parallel::makePSOCKcluster(ncores)#,outfile="")
   doParallel::registerDoParallel(cl)
   if (copy ==TRUE){
     files<-paste0(folder,basename(targets$Basename))
@@ -157,7 +157,7 @@ read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose
   requireNamespace("S4Vectors")
   res<-foreach::foreach(it=itertools::isplitIndices(nrow(targets), chunks=ncores),#isplitIndices(1400,chunks=ncores),
                         .combine='cbind',
-                        .multicombine = F,
+                        .multicombine = F,.export = c("guessArrayTypes"),
                         .inorder=F,
                         .errorhandling = "pass"
   )%dopar%{
@@ -170,18 +170,24 @@ read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose
     }
 
     rgSet<-minfi::read.metharray(basenames = files[it], extended = extended, verbose = verbose, force =force)
-    if(arraytype=="EPIC") {rgSet@annotation <- c(array="IlluminaHumanMethylationEPIC",annotation="ilm10b4.hg19")}
-    else if (arraytype=="450K"){rgSet@annotation <- c(array="IlluminaHumanMethylation450k",annotation="ilmn12.hg19")
-
-    }else{rgSet@annotation<-.guessArrayTypes(nrow(rgSet))}
+    if (is.null(arraytype)){
+      rgSet@annotation<-guessArrayTypes(nrow(rgSet))
+    }else{
+      if (arraytype=="EPIC") {rgSet@annotation <- c(array="IlluminaHumanMethylationEPIC",annotation="ilm10b4.hg19")}
+      else if (arraytype=="450K"){rgSet@annotation <- c(array="IlluminaHumanMethylation450k",annotation="ilmn12.hg19")
+      }else{rgSet@annotation<-guessArrayTypes(nrow(rgSet))}
+    }
     return(rgSet)
   }
+
   parallel::stopCluster(cl)
+  print(res)
+  class(res)
   pD <- data.frame(targets)
   pD$filenames <- files
-  rownames(pD) <- colnames(res)
+  #rownames(pD) <- colnames(res)
   res@colData <- methods::as(pD, "DataFrame")
-  #rownames(res@colData)<-colnames(res)
+  rownames(res@colData)<-colnames(res)
   return(res)
 }
 
@@ -264,6 +270,9 @@ purify <- function(myLoad,knn=5){
 #' @param frac Fraction of faulty probes (P-value > pval ) allowed. default 0.1
 #' @param pval P-value cutoff. default 0.01
 #' @param remove_sex Boolean. Should sex chromosomes be removed? default = TRUE
+#' @importFrom grDevices c("dev.off", "pdf")
+#' @importFrom graphics barplot
+#' @importFrom stats sd
 #' @return Normalized & filtered RGset.
 
 queryfy<-function(myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL){
