@@ -98,7 +98,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
   # Qc:
   qc_folder<-paste0(out,"/QC/")
   dir.create(normalizePath(qc_folder),showWarnings = F)
-  g<-  c("Sample_Group","Group","Type","Condition","Category")[ c("Sample_Group","Group","Type","Condition","Category") %in% colnames(targets)]
+  g<-  intersect(c("Sample_Group","Group","Type","Condition","Category"), colnames(targets))
   g<-g[1]
   qc(rgSet = myLoad,sampGroups = g,sampNames = "Sample_Name")
 
