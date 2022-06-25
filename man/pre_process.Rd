@@ -3,6 +3,7 @@
 \name{pre_process}
 \alias{pre_process}
 \alias{pre_process.myLoad}
+\alias{qc}
 \alias{purify}
 \alias{queryfy}
 \title{Pre-process methylation array data from (raw) .idat files to segment & log2r intensity files calculated by CONUMEE.}
@@ -17,8 +18,11 @@ pre_process(
   subf = "IDATS/",
   folder = NULL,
   ncores = NULL,
-  arraytype = "450K",
-  copy = FALSE
+  arraytype = NULL,
+  copy = FALSE,
+  frac = 0.1,
+  pval = 0.01,
+  remove_sex = TRUE
 )
 
 pre_process.myLoad(
@@ -30,9 +34,16 @@ pre_process.myLoad(
   copy = FALSE
 )
 
+qc(
+  rgSet,
+  sampGroups = "Sample_Group",
+  sampNames = "Sample_Name",
+  qc_folder = "analysis/intermediate/QC/"
+)
+
 purify(myLoad, knn = 5)
 
-queryfy(myLoad)
+queryfy(myLoad, frac = 0.1, pval = 0.01, remove_sex = TRUE, arraytype = NULL)
 }
 \arguments{
 \item{targets}{A sample sheet with the required fields for ChAMP to load files.}
@@ -46,8 +57,7 @@ Default=TRUE}
 \item{RGset}{Whether you want normalised "RGChannelSet" or
 "RGChannelSetExtended" to be saved or not. path=out}
 
-\item{out}{Results folder to store the normalized and clean RGset.
-Default = NULL}
+\item{out}{Results folder to store the normalized and clean RGset.}
 
 \item{idats_folder}{Folder containing idats. It will try to guess which idat
 belongs to which row in the targets data.frame.}
@@ -65,7 +75,21 @@ minfi::read.450k.sheet.}
 \item{copy}{Change to TRUE if you want to copy files to idats folder.
 Useful when working in HPC and idats are in ISILON.}
 
+\item{frac}{Fraction of faulty probes (P-value > pval ) allowed. default 0.1}
+
+\item{pval}{P-value cutoff. default 0.01}
+
+\item{remove_sex}{Boolean. Should sex chromosomes be removed? default = TRUE}
+
 \item{files}{Files}
+
+\item{rgSet}{An object of class \code{RGChannelSet}.}
+
+\item{sampGroups}{Sample groups to be used for labels.}
+
+\item{sampNames}{Sample names to be used for labels.}
+
+\item{qc_folder}{Path to location where qc_report and plot will be saved.}
 
 \item{myLoad}{a RGset as returned by minfi::read.metharray.exp. will use this as basedir to
 load the idats. default is results/IDATS/.}
@@ -76,9 +100,15 @@ load the idats. default is results/IDATS/.}
 Log2r intensities ready to be analysed with conumee.
 
 RGset
+
+Qc plots
+
+Normalized & filtered RGset.
 }
 \description{
 construct RGChannelSet in parallel using foreach
+
+Generate Qc reports
 }
 \examples{
 
@@ -87,5 +117,7 @@ ss<-TrainingSet_Sample_sheet[1:56,]
 pre_process(ss)
 }
 \author{
+izar de Villasante
+
 izar de Villasante
 }

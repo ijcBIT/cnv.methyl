@@ -7,10 +7,10 @@
 read.metharray.exp.par(
   targets,
   folder,
-  files,
+  files = NULL,
   copy = FALSE,
   verbose = TRUE,
-  arraytype = "450K",
+  arraytype = NULL,
   ncores = NULL,
   extended = FALSE,
   force = FALSE
