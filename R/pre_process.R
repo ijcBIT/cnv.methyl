@@ -181,7 +181,7 @@ read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose
   }
 
   parallel::stopCluster(cl)
-  print(res)
+
   class(res)
   pD <- data.frame(targets)
   pD$filenames <- files
@@ -226,9 +226,9 @@ pre_process.myLoad <-function(targets,folder,arraytype="450K",ncores=NULL, files
 qc <- function(rgSet,sampGroups="Sample_Group", sampNames= "Sample_Name",qc_folder="analysis/intermediate/QC/"){
   minfi::qcReport(rgSet = rgSet,
            pdf = paste0(qc_folder,"Report.pdf"),
-           sampGroups = myLoad@colData[sampGroups],
-           sampNames = myLoad@colData[sampNames])
-  mSet <- minfi::preprocessRaw(myLoad)
+           sampGroups = rgSet@colData[sampGroups],
+           sampNames = rgSet@colData[sampNames])
+  mSet <- minfi::preprocessRaw(rgSet)
   qc   <- minfi::getQC(mSet)
   grDevices::pdf(file = paste0(qc_folder,"mean_qc.pdf"),   # The directory you want to save the file in
       width = 7, # The width of the plot in inches
