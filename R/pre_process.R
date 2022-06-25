@@ -100,7 +100,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
   dir.create(normalizePath(qc_folder),showWarnings = F)
   g<-  c("Sample_Group","Group","Type","Condition","Category")[ c("Sample_Group","Group","Type","Condition","Category") %in% colnames(targets)]
   g<-g[1]
-  qc(myLoad,rgSet = ,sampGroups = g,sampNames = "Sample_Name")
+  qc(rgSet = myLoad,sampGroups = g,sampNames = "Sample_Name")
 
   if(is.null(purity)){
     purity<-purify(myLoad=myLoad)
