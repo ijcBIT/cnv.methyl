@@ -230,10 +230,11 @@ qc <- function(rgSet,sampGroups="Sample_Group", sampNames= "Sample_Name",qc_fold
            sampNames = myLoad@colData[sampNames])
   mSet <- minfi::preprocessRaw(myLoad)
   qc   <- minfi::getQC(mSet)
-  pdf(file = paste0(qc_folder,"mean_qc.pdf"),   # The directory you want to save the file in
+  grDevices::pdf(file = paste0(qc_folder,"mean_qc.pdf"),   # The directory you want to save the file in
       width = 7, # The width of the plot in inches
       height = 7) # The height of the plot in inches
   minfi::plotQC(qc)
+
   dev.off()
 }
 
@@ -270,7 +271,7 @@ purify <- function(myLoad,knn=5){
 #' @param frac Fraction of faulty probes (P-value > pval ) allowed. default 0.1
 #' @param pval P-value cutoff. default 0.01
 #' @param remove_sex Boolean. Should sex chromosomes be removed? default = TRUE
-#' @importFrom grDevices c("dev.off", "pdf")
+
 #' @importFrom graphics barplot
 #' @importFrom stats sd
 #' @return Normalized & filtered RGset.
@@ -282,12 +283,12 @@ queryfy<-function(myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL){
   # Check quality of the combined probe signal (testing against negative controls)
   # 1. Remove low quality samples. Defaults more than 10% we throw samples away.
   detP <- minfi::detectionP(myLoad, type = "m+u")
-  pdf(file = paste0(qc_folder,"mean_detection_pvalues.pdf"),width = 7,height = 7)
+  grDevices::pdf(file = paste0(qc_folder,"mean_detection_pvalues.pdf"),width = 7,height = 7)
   barplot(colMeans(detP),
           names = targets$Sample_Name,
           las = 2, cex.names = 0.8,
           main = "Mean detection p-values")
-  dev.off()
+  grDevices::dev.off()
 
   bad <- colnames(detP)[colSums(detP >=pval)/nrow(detP) > frac]
   if(length(bad)>0){
