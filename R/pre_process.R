@@ -111,7 +111,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
     message(paste("targets is saved ",out))
   }
   if(query==T){
-    query <- queryfy(myLoad,arraytype=arraytype,frac=frac,pval=pval,remove_sex=remove_sex)
+    query <- queryfy(myLoad,arraytype=arraytype,frac=frac,pval=pval,remove_sex=remove_sex,qc_folder=qc_folder)
     if (RGset==T){
       saveRDS(query,paste0(out,"/intensities.rds"),compress = FALSE)
     }
@@ -276,7 +276,7 @@ purify <- function(myLoad,knn=5){
 #' @importFrom stats sd
 #' @return Normalized & filtered RGset.
 
-queryfy<-function(myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL){
+queryfy<-function(myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL,qc_folder= "analysis/intermediate/QC"){
   requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19")
   requireNamespace("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
 
