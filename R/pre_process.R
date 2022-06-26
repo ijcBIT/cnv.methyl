@@ -203,7 +203,7 @@ read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose
 #' @export
 pre_process.myLoad <-function(targets,folder,arraytype="450K",ncores=NULL, files=NULL, copy=FALSE) {
   message("working directory: ",folder)
-  file.remove(list.files(folder, full.names = TRUE))
+  #file.remove(list.files(folder, full.names = TRUE))
   #idats_folder(targets,folder = folder)
   utils::write.csv(targets,paste0(folder,"/Sample_sheet.csv"))
   myLoad <- read.metharray.exp.par(targets=targets,files=files,folder = folder,arraytype=arraytype,ncores=ncores,copy=copy)
@@ -226,8 +226,8 @@ pre_process.myLoad <-function(targets,folder,arraytype="450K",ncores=NULL, files
 qc <- function(rgSet,sampGroups="Sample_Group", sampNames= "Sample_Name",qc_folder="analysis/intermediate/QC/"){
   minfi::qcReport(rgSet = rgSet,
            pdf = paste0(qc_folder,"Report.pdf"),
-           sampGroups = rgSet@colData[sampGroups],
-           sampNames = rgSet@colData[sampNames])
+           sampGroups = rgSet@colData[[sampGroups]],
+           sampNames = rgSet@colData[[sampNames]])
   mSet <- minfi::preprocessRaw(rgSet)
   qc   <- minfi::getQC(mSet)
   grDevices::pdf(file = paste0(qc_folder,"mean_qc.pdf"),   # The directory you want to save the file in
