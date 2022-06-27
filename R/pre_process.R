@@ -111,7 +111,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
     message(paste("targets is saved ",out))
   }
   if(query==T){
-    query <- queryfy(myLoad,arraytype=arraytype,frac=frac,pval=pval,remove_sex=remove_sex,qc_folder=qc_folder)
+    query <- queryfy(targets = targets,myLoad,arraytype=arraytype,frac=frac,pval=pval,remove_sex=remove_sex,qc_folder=qc_folder)
     if (RGset==T){
       saveRDS(query,paste0(out,"/intensities.rds"),compress = FALSE)
     }
@@ -276,7 +276,7 @@ purify <- function(myLoad,knn=5){
 #' @importFrom stats sd
 #' @return Normalized & filtered RGset.
 
-queryfy<-function(myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL,qc_folder= "analysis/intermediate/QC"){
+queryfy<-function(targets, myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL,qc_folder= "analysis/intermediate/QC"){
   requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19")
   requireNamespace("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
 
@@ -306,7 +306,8 @@ queryfy<-function(myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL,qc_fo
   mSetSqn <- mSetSqn[rowSums(detP < pval) == ncol(mSetSqn),]
 
   # 4. Removing probes with known SNPs at CpG site
-  mSetSqn <- minfi::dropLociWithSnps(minfi::mapToGenome(mSetSqn))
+  mSetSqn <-  minfi::mapToGenome(mSetSqn)
+  mSetSqn <- minfi::dropLociWithSnps(mSetSqn)
 
   # 5. Removing cross reactive probes
   mSetSqn <-  maxprobes::dropXreactiveLoci(mSetSqn)
@@ -314,12 +315,12 @@ queryfy<-function(myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL,qc_fo
   # 6. Sex. prediction & removal
   mSetSqn$Sex_pred <- minfi::getSex(mSetSqn, cutoff = -2)$predictedSex
   if(remove_sex){
-    if(!is.null(array_type)){anno<-get_anno(array_type)
+    if(!is.null(array_type)){anno<-get_anno(arraytype)
     }else{
       anno<-minfi::getAnnotation(mSetSqn)
       anno<-anno[!(anno$chr %in% c("chrX","chrY")),]
     }
-    mSetSqn[rownames(anno),]
+    mSetSqn<-mSetSqn[rownames(anno),]
   }
   return(mSetSqn)
 
