@@ -21,19 +21,19 @@
 
 Kc_get<-function(
   ID,ss,ref_genes="all",segfile_folder = "analysis/CONUMEE/Segments",
-  log2rfile_folder = "analysis/CONUMEE/log2r",arraytype="450K",anno_file=NULL,cn_genes=NULL,Kc_method="balanced"
+  log2rfile_folder = "analysis/CONUMEE/log2r",arraytype=NULL,anno_file=NULL,cn_genes=NULL,Kc_method="balanced"
   ){
   # Prepare data:
-  anno<-get_anno(anno_file,arraytype)
+  anno<-get_anno(anno = anno_file, x = arraytype)
   ss<-data.table::setDT(ss)
   data.table::setkey(ss,"Sample_Name")
   # Calculate Thrersholds:
   Tre_list<-get_Tresholds(ss,ID,log2rfile_folder,Kc_method=Kc_method)
-  Tresholds<-Tre_list[[1]]
-  TresholdsN<-Tre_list[[2]]
+  Tresholds<-unlist(Tre_list[[1]])
+  TresholdsN<-unlist(Tre_list[[2]])
   # Load segment file:
   std_segfile <- rlang::expr(paste0(folder = segfile_folder,ID,'_Segments.txt'))#rlang::expr(paste0(folder,"/","Segments_",ID,'.txt'))
-  segfile <- check_input_files(Sample_Name = ss$Sample_Name,folder = segfile_folder, std_file = std_segfile)
+  segfile <- check_input_files(Sample_Name = ID,folder = segfile_folder, std_file = std_segfile)
   seg<-data.table::fread(segfile)
   #Calculate cn & cna
   cnlist<-apply(seg,1, function(x){

@@ -68,14 +68,24 @@ run_cnv.methyl<-function(
               Sample_Name=Sample_Name,seg.folder = seg.folder,
               log2r.folder = log2r.folder,arraytype=arraytype,
               conumee.folder=conumee.folder, probeid=probeid)
-  # Cluster:
+
+  #test
+  #devtools::load_all()
+  #rgSet<-readRDS("/data/CN_SCLC/rgSet.rds")
+  #ss_all<-ss<-data.table::data.table(as.data.frame(rgSet@colData))
+  #ss$impute_purity<-purify(rgSet)
+
+   # Cluster:
 
   cl<- parallel::makePSOCKcluster(get_ncores(ncores), outfile="")
   parallel::clusterEvalQ(cl,{
                          library("data.table")
 
+    #devtools::load_all()
+
                          })
   doParallel::registerDoParallel(cl)
+
   res<-foreach::foreach(i=1:length(ss$Sample_Name),#isplitIndices(1400,chunks=ncores),
                         .combine='c',
                         .multicombine = F,
@@ -84,13 +94,18 @@ run_cnv.methyl<-function(
                         .export = c("AllGenes","CancerGenes"),
                         .errorhandling = "pass"
   )%dopar%{
-    load("R/sysdata.rda")
+    #load("R/sysdata.rda")
 
-    source("R/utils.R")
-    source("R/Kc_get.R")
+    #source("R/utils.R")
+    #source("R/Kc_get.R")
+
     #source()
-     ss<-ss[i,]
-     ID<-ss$Sample_Name
+     # purify(rgSet)->ss$impute_purity
+     # ss<-ss[i,]
+     # ID<-ss$Sample_Name
+     # arraytype="450K"
+     # ref_genes="all"
+     # anno=anno_epic
      cna <- Kc_get(ss=ss,ID=ID,ref_genes = ref_genes,arraytype=arraytype,anno=anno)
     # cna
      return(cna)

@@ -55,7 +55,7 @@ get_Tresholds<-function(ss,ID,log2rfile_folder,Kc_method="balanced"){
   KN<-Kcs[[2]]
   # Load log2r file and calculate baseline & Var.
   std_log2rfile <- rlang::expr(paste0(folder=log2rfile_folder,ID,'_log2r.txt'))
-  log2file <- check_input_files(Sample_Name = ss$Sample_Name,folder = log2rfile_folder, std_file = std_log2rfile)
+  log2file <- check_input_files(Sample_Name = ID,folder = log2rfile_folder, std_file = std_log2rfile)
   suppressWarnings(Log2<-data.table::fread(log2file,col.names = c("probeid","log2r")))
   baseline <- mean(Log2$log2r, na.rm=T)
   purity<-names(ss)[names(ss) %ilike% "impute" & names(ss) %ilike% "purity" ]
@@ -156,7 +156,9 @@ guessArrayTypes <- function(nProbes) {
   }
   arrayAnnotation
 }
-get_anno <- function(x = c("450K", "EPIC", "overlap"),anno=NULL) {
+get_anno <- function(x = c("450K", "EPIC", "overlap"),anno=NULL,arraytype=NULL) {
+
+  #requireNamespace("cnv.methyl")
   if(!is.null(anno)){
 
     out<-tryCatch(
@@ -176,7 +178,7 @@ get_anno <- function(x = c("450K", "EPIC", "overlap"),anno=NULL) {
       {  match.arg(x)
         switch(x,
                "EPIC" = anno_epic,
-               "450K" = anno_450K,
+               "450K" = cnv.methyl:::anno_450K,
                "overlap" = anno_overlap
         )
       },error=function(cond){
