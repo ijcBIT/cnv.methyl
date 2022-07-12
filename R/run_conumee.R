@@ -127,6 +127,10 @@ tryCatch(
     }
   }else{
     message("dataset")
+    if(class(infile)=="CNV.data"){
+      my.data<-infile@intensity
+      data.table::setDT(my.data)
+    }else
       rn<-rownames(infile)
       suppressWarnings(t<-try(my.data<-data.table::as.data.table(infile)))
       if (inherits(t, "try-error")){

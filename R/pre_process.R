@@ -32,6 +32,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
                       idats_folder=NULL,subf="IDATS/",folder=NULL,ncores=NULL,arraytype=NULL,
                       copy=FALSE,frac=0.1,pval=0.01,remove_sex=TRUE){
   #data('hm450.manifest.hg19')
+  targets <- targets[,colSums(is.na(targets))<nrow(targets)]
   if (!is.character(folder)) folder<-paste0(out,subf)
   dir.create(folder,recursive=TRUE)
   if (!is.null(targets)) {
@@ -255,6 +256,7 @@ purify <- function(myLoad,knn=5){
     ,
     , drop = FALSE
   ]
+  rownames(betas)<-rownames(RFpurify_ABSOLUTE$importance)
   betas<-tryCatch(
     {betas<-impute::impute.knn(data = betas, k=knn)$data},
     error={ betas[is.na(betas)]<-mean(betas,na.rm=T)}
@@ -284,7 +286,14 @@ queryfy<-function(targets, myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=N
   # 1. Remove low quality samples. Defaults more than 10% we throw samples away.
   detP <- minfi::detectionP(myLoad, type = "m+u")
   grDevices::pdf(file = paste0(qc_folder,"mean_detection_pvalues.pdf"),width = 7,height = 7)
+  barplot(colMeans(detP), col=pal[factor(targets$Sample_Group)], las=2,
+          cex.names=0.8, ylim=c(0,0.002), ylab="Mean detection p-values")
+  abline(h=0.05,col="red")
+  legend("topleft", legend=levels(factor(targets$Sample_Group)), fill=pal,
+         bg="white")
+  color<-cols
   barplot(colMeans(detP),
+          col=cols[factor(targets$Sample_Group)],
           names = targets$Sample_Name,
           las = 2, cex.names = 0.8,
           main = "Mean detection p-values")
@@ -299,30 +308,40 @@ queryfy<-function(targets, myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=N
     cat("All samples passed detection P-value filter")
   }
 
-  # 2. Preprocessing using Noob normalization method
-  mSetSqn <- minfi::preprocessNoob(myLoad)
+  # 2. Preprocessing:
 
-  # 3. Removing low-quality probes (with p-value below pval)
-  mSetSqn <- mSetSqn[rowSums(detP < pval) == ncol(mSetSqn),]
+  mSetSqn_noob <- minfi::preprocessNoob(myLoad)
+  mSetSqn_pq <- minfi::preprocessQuantile(myLoad)
+  mSetSqn_funn <- minfi::preprocessFunnorm(myLoad)
+  mSetSqn_noob_pq <- minfi::preprocessQuantile(mSetSqn_noob)
+  mSetSqn_funn_pq <- minfi::preprocessQuantile(mSetSqn_funn)
 
-  # 4. Removing probes with known SNPs at CpG site
-  mSetSqn <-  minfi::mapToGenome(mSetSqn)
-  mSetSqn <- minfi::dropLociWithSnps(mSetSqn)
+  mSets<-list(mSetSqn_noob,mSetSqn_pq,mSetSqn_funn,mSetSqn_noob_pq,mSetSqn_funn_pq)
+  mSets_out<-list()
+  for (mSetSqn in mSets){
+    # 3. Removing low-quality probes (with p-value below pval)
+    mSetSqn <- mSetSqn[rowSums(detP < pval) == ncol(mSetSqn),]
 
-  # 5. Removing cross reactive probes
-  mSetSqn <-  maxprobes::dropXreactiveLoci(mSetSqn)
+    # 4. Removing probes with known SNPs at CpG site
+    mSetSqn <-  minfi::mapToGenome(mSetSqn)
+    mSetSqn <- minfi::dropLociWithSnps(mSetSqn)
 
-  # 6. Sex. prediction & removal
-  mSetSqn$Sex_pred <- minfi::getSex(mSetSqn, cutoff = -2)$predictedSex
-  if(remove_sex){
-    if(!is.null(array_type)){anno<-get_anno(arraytype)
-    }else{
-      anno<-minfi::getAnnotation(mSetSqn)
-      anno<-anno[!(anno$chr %in% c("chrX","chrY")),]
+    # 5. Removing cross reactive probes
+    mSetSqn <-  maxprobes::dropXreactiveLoci(mSetSqn)
+
+    # 6. Sex. prediction & removal
+    mSetSqn$Sex_pred <- minfi::getSex(mSetSqn, cutoff = -2)$predictedSex
+    if(remove_sex){
+      if(!is.null(array_type)){anno<-get_anno(arraytype)
+      }else{
+        anno<-minfi::getAnnotation(mSetSqn)
+        anno<-anno[!(anno$chr %in% c("chrX","chrY")),]
+      }
+      mSets_out<-append(mSets,mSetSqn[rownames(anno),])
     }
-    mSetSqn<-mSetSqn[rownames(anno),]
+
   }
-  return(mSetSqn)
+  return(mSets_out)
 
   # mSetSqn <- CNV.load(mSetSqn)
   # return(mSetSqn@intensity)
