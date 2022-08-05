@@ -10,7 +10,7 @@ Kc_get(
   ref_genes = "all",
   segfile_folder = "analysis/CONUMEE/Segments",
   log2rfile_folder = "analysis/CONUMEE/log2r",
-  arraytype = "450K",
+  arraytype = NULL,
   anno_file = NULL,
   cn_genes = NULL,
   Kc_method = "balanced"
@@ -49,7 +49,9 @@ with the copy number alterations for each of them.
 Set of functions to obtain Kc from reference copy number state.
 }
 \examples{
-data("ss")
+
+data("TrainingSet_Sample_sheet")
+ss<-TrainingSet_Sample_sheet[1:56,]
 ID="TCGA-19-A6J4-01A-11D-A33U-05"
 ss[Sample_Name==ID,]->ss
 cna<-Kc_get(ss=ss,ID="TCGA-19-A6J4-01A-11D-A33U-05")

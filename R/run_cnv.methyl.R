@@ -106,7 +106,7 @@ run_cnv.methyl<-function(
      # arraytype="450K"
      # ref_genes="all"
      # anno=anno_epic
-     cna <- Kc_get(ss=ss,ID=ID,ref_genes = ref_genes,arraytype=arraytype,anno=anno)
+     cna <- Kc_get(ss=ss,ID=ID,ref_genes = ref_genes,arraytype=arraytype,anno_file = anno)
     # cna
      return(cna)
   }

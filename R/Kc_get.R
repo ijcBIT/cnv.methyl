@@ -9,14 +9,14 @@
 #' with the copy number alterations for each of them.
 #' @export
 #' @examples
-#' data("ss")
+#'
+#' data("TrainingSet_Sample_sheet")
+#' ss<-TrainingSet_Sample_sheet[1:56,]
 #' ID="TCGA-19-A6J4-01A-11D-A33U-05"
 #' ss[Sample_Name==ID,]->ss
 #' cna<-Kc_get(ss=ss,ID="TCGA-19-A6J4-01A-11D-A33U-05")
 #' cna
 
-# # data("TrainingSet_Sample_sheet")
-#  # ss<-TrainingSet_Sample_sheet[1:20,]
 
 
 Kc_get<-function(
@@ -28,7 +28,7 @@ Kc_get<-function(
   ss<-data.table::setDT(ss)
   data.table::setkey(ss,"Sample_Name")
   # Calculate Thrersholds:
-  Tre_list<-get_Tresholds(ss,ID,log2rfile_folder,Kc_method=Kc_method)
+  Tre_list<-get_Tresholds(ss = ss,ID = ID, log2rfile_folder = log2rfile_folder, Kc_method=Kc_method)
   Tresholds<-unlist(Tre_list[[1]])
   TresholdsN<-unlist(Tre_list[[2]])
   # Load segment file:

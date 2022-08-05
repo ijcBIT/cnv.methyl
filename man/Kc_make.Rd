@@ -6,6 +6,7 @@
 \usage{
 Kc_make(
   ss,
+  ID,
   arraytype = NULL,
   cncols = c("Amp10", "Amp", "Gains", "HetLoss", "HomDel"),
   segfile_folder = "analysis/CONUMEE/Segments",
@@ -17,6 +18,8 @@ Kc_make(
 }
 \arguments{
 \item{ss}{Sample sheet containing purities, cnstate and Sample_Name ids.}
+
+\item{ID}{ID inside Sample sheet and in the Sample_Name.}
 
 \item{arraytype}{Methylation array type}
 
