@@ -18,6 +18,7 @@
 #' belongs to which row in the targets data.frame.
 #' @param copy Change to TRUE if you want to copy files to idats folder.
 #' Useful when working in HPC and idats are in ISILON.
+#' @param sampGroups  Groups for qc report & plots color category.
 #' @inheritParams run_cnv.methyl
 #' @return Log2r intensities ready to be analysed with conumee.
 #' @export
@@ -30,9 +31,9 @@
 
 pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/intermediate/",
                       idats_folder=NULL,subf="IDATS/",folder=NULL,ncores=NULL,arraytype=NULL,
-                      copy=FALSE,frac=0.1,pval=0.01,remove_sex=TRUE){
+                      copy=FALSE,frac=0.1,pval=0.01,remove_sex=TRUE,sampGroups=NULL){
   #data('hm450.manifest.hg19')
-  targets <- targets[,colSums(is.na(targets))<nrow(targets)]
+  #targets <- targets[,colSums(is.na(targets))<nrow(targets)]
   if (!is.character(folder)) folder<-paste0(out,subf)
   dir.create(folder,recursive=TRUE)
   if (!is.null(targets)) {
@@ -89,7 +90,7 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
     }
     files<-targets$Basename
 
-    }else{
+  }else{
     stop("Must provide a 'targets' data.frame in order to continue")
   }
 
@@ -99,8 +100,12 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
   # Qc:
   qc_folder<-paste0(out,"/QC/")
   dir.create(normalizePath(qc_folder),showWarnings = F)
-  g<-  intersect(c("Sample_Group","Group","Type","Condition","Category"), colnames(targets))
-  g<-g[1]
+  if(is.null(sampGroups)){
+    g<-  intersect(c("Sample_Group","Group","Type","Condition","Category"), colnames(targets))
+    g<-g[1]
+  }else{
+    g<-sampGroups
+  }
   qc(rgSet = myLoad,sampGroups = g,sampNames = "Sample_Name")
 
   if(is.null(purity)){
@@ -124,6 +129,8 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
 
 #' construct RGChannelSet in parallel using foreach
 #'
+#' construct RGChannelSet in parallel using foreach
+#'
 #'
 #' @title construct RGChannelSet in parallel
 #'
@@ -141,36 +148,42 @@ pre_process<-function(targets,purity=NULL,query=T,RGset=T,out="./analysis/interm
 #' @inheritParams minfi::read.metharray
 
 
-
-
-
-
-read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose = TRUE, arraytype = NULL, ncores=NULL, extended = FALSE, force = FALSE){
+read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose = TRUE, arraytype = NULL, ncores=NULL, extended = FALSE, force = TRUE){
   #Make cluster:
   if(is.null(files)) files<- targets$Basename
-  ncores<-get_ncores(ncores)
-  message("Reading multiple idat-files in parallel. Using ",ncores," cores.")
-  cl<- parallel::makePSOCKcluster(ncores)#,outfile="")
-  doParallel::registerDoParallel(cl)
   if (copy ==TRUE){
     files<-paste0(folder,basename(targets$Basename))
   }
-  requireNamespace("S4Vectors")
+
+
+  ncores<-get_ncores(ncores)
+
+  cl<- parallel::makePSOCKcluster(ncores)#,outfile="")
+  parallel::clusterEvalQ(cl,{
+    requireNamespace(c("minfi","S4Vectors"))
+  })
+  doParallel::registerDoParallel(cl)
+
+  message("Reading multiple idat-files in parallel. Using ",ncores," cores.")
   res<-foreach::foreach(it=itertools::isplitIndices(nrow(targets), chunks=ncores),#isplitIndices(1400,chunks=ncores),
                         .combine='cbind',
-                        .multicombine = F,.export = c("guessArrayTypes"),
+                        .multicombine = F,.export = c("guessArrayTypes",".default.epic.annotation"),
                         .inorder=F,
                         .errorhandling = "pass"
   )%dopar%{
-    requireNamespace(c("minfi","fs"))
+
     subdf<-as.data.frame(targets[it,])
+    # handle idats path
     if (copy ==TRUE){
+      requireNamespace("fs")
       fs::file_copy(paste0(subdf$Basename,"_Grn.idat"),new_path=folder,overwrite = T)
       fs::file_copy(paste0(subdf$Basename,"_Red.idat"),new_path=folder,overwrite=T)
-
     }
 
+    # read idats:
     rgSet<-minfi::read.metharray(basenames = files[it], extended = extended, verbose = verbose, force =force)
+
+    # arraytype:
     if (is.null(arraytype)){
       rgSet@annotation<-guessArrayTypes(nrow(rgSet))
     }else{
@@ -182,15 +195,19 @@ read.metharray.exp.par <- function(targets,folder,files=NULL,copy=FALSE, verbose
   }
 
   parallel::stopCluster(cl)
-
+  cn<-colnames(res)
   class(res)
-  pD <- data.frame(targets)
+  data.table::setkey(targets,"barcode")
+  pD <- data.frame(targets[cn,])
   pD$filenames <- files
   #rownames(pD) <- colnames(res)
   res@colData <- methods::as(pD, "DataFrame")
-  rownames(res@colData)<-colnames(res)
+  rownames(res@colData)<-cn
+  colnames(res)<-cn
+
   return(res)
 }
+
 
 #' construct RGChannelSet in parallel using foreach
 #'
@@ -224,21 +241,44 @@ pre_process.myLoad <-function(targets,folder,arraytype="450K",ncores=NULL, files
 #' @author izar de Villasante
 #' @export
 #'
-qc <- function(rgSet,sampGroups="Sample_Group", sampNames= "Sample_Name",qc_folder="analysis/intermediate/QC/"){
+qc <- function(rgSet,sampGroups=NULL, sampNames= "Sample_Name",qc_folder="analysis/intermediate/QC/"){
+  if (!(sampNames %in% names(rgSet@colData))) sampNames <- colnames(rgSet)
+  n <- ncol(rgSet)
+  o <- rev(order(sampNames))
+  rgSet <- rgSet[, o]
+  sampNames <- sampNames[o]
+  if (is.null(sampGroups))
+    sampGroups <- rep(1, n)
+  sampGroups <- sampGroups[o]
+  dir.create(qc_folder,recursive=T,showWarnings = F)
   minfi::qcReport(rgSet = rgSet,
-           pdf = paste0(qc_folder,"Report.pdf"),
-           sampGroups = rgSet@colData[[sampGroups]],
-           sampNames = rgSet@colData[[sampNames]])
+                  pdf = paste0(qc_folder,"Report.pdf"),
+                  sampGroups = rgSet@colData[[sampGroups]],
+                  sampNames = rgSet@colData[[sampNames]])
+  if(length(unique(rgSet@colData[[sampGroups]]))>8){
+    grDevices::pdf(file = paste0(qc_folder,"density_plot.pdf"),
+                   width = 9, # The width of the plot in inches
+                   height = 11) # The height of the plot in inches
+    minfi::densityPlot(
+      rgSet, sampGroups = rgSet@colData[[sampGroups]],main = "Beta",
+      pal =  c(
+        "#191919", "#F0A0FF", "#0075DC", "#993F00", "#005C31", "#5EF1F2", "#FF0010",
+        "#FFCC99", "#808080", "#94FFB5", "#8F7C00", "#9DCC00", "#C20088", "#003380",
+        "#FFA405", "#FFA8BB", "#426600", "#2BCE48", "#4C005C", "#00998F", "#E0FF66",
+        "#740AFF", "#990000", "#FFFF80", "#FFE100", "#FF5005")
+    )
+    grDevices::dev.off()()
+
+  }
   mSet <- minfi::preprocessRaw(rgSet)
   qc   <- minfi::getQC(mSet)
   grDevices::pdf(file = paste0(qc_folder,"mean_qc.pdf"),   # The directory you want to save the file in
-      width = 7, # The width of the plot in inches
-      height = 7) # The height of the plot in inches
+                 width = 7, # The width of the plot in inches
+                 height = 7) # The height of the plot in inches
   minfi::plotQC(qc)
 
-  dev.off()
+  grDevices::dev.off()()
 }
-
 #' @export
 #' @rdname pre_process
 #' @param myLoad a RGset as returned by minfi::read.metharray.exp. will use this as basedir to
@@ -247,6 +287,7 @@ qc <- function(rgSet,sampGroups="Sample_Group", sampNames= "Sample_Name",qc_fold
 
 purify <- function(myLoad,knn=5){
   requireNamespace("randomForest")
+  #RFpurify_ABSOLUTE<-cnv.methyl:::RFpurify_ABSOLUTE
   sink(tempfile())
   on.exit(sink())
 
@@ -261,7 +302,7 @@ purify <- function(myLoad,knn=5){
     {betas<-impute::impute.knn(data = betas, k=knn)$data},
     error={ betas[is.na(betas)]<-mean(betas,na.rm=T)}
 
-    )
+  )
 
   absolute<-stats::predict(RFpurify_ABSOLUTE, t(betas))
   return(absolute)
@@ -273,52 +314,68 @@ purify <- function(myLoad,knn=5){
 #' @param frac Fraction of faulty probes (P-value > pval ) allowed. default 0.1
 #' @param pval P-value cutoff. default 0.01
 #' @param remove_sex Boolean. Should sex chromosomes be removed? default = TRUE
+#' @param rgSet Input RGChannelSet object with raw idats and metadata.
+#' @inheritParams pre_process
 
-#' @importFrom graphics barplot
+#' @importFrom graphics barplot abline legend par
+#' @importFrom grDevices  dev.off
 #' @importFrom stats sd
 #' @return Normalized & filtered RGset.
 
-queryfy<-function(targets, myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL,qc_folder= "analysis/intermediate/QC"){
-  requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19")
-  requireNamespace("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
+queryfy<-function(targets, rgSet,sampGroups=NULL,sampNames="Sample_Name",frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=NULL,qc_folder= "analysis/intermediate/QC"){
+  # requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  # requireNamespace("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
+  if (!(sampNames %in% names(rgSet@colData))) sampNames <- colnames(rgSet)
+  n <- ncol(rgSet)
+  #o <- rev(order(sampNames))
+  #rgSet <- rgSet[, o]
+  #sampNames <- sampNames[o]
+  if (is.null(sampGroups)) g <- rep(1, n) else g <- targets[[sampGroups]]
+  if (is.null(g)) g<-1:n
+  g <- factor(g)
+
+  pal =  c(
+    "#191919", "#F0A0FF", "#0075DC", "#993F00", "#005C31", "#5EF1F2", "#FF0010",
+    "#FFCC99", "#808080", "#94FFB5", "#8F7C00", "#9DCC00", "#C20088", "#003380",
+    "#FFA405", "#FFA8BB", "#426600", "#2BCE48", "#4C005C", "#00998F", "#E0FF66",
+    "#740AFF", "#990000", "#FFFF80", "#FFE100", "#FF5005")
+
 
   # Check quality of the combined probe signal (testing against negative controls)
   # 1. Remove low quality samples. Defaults more than 10% we throw samples away.
-  detP <- minfi::detectionP(myLoad, type = "m+u")
+  detP <- minfi::detectionP(rgSet, type = "m+u")
   grDevices::pdf(file = paste0(qc_folder,"mean_detection_pvalues.pdf"),width = 7,height = 7)
-  barplot(colMeans(detP), col=pal[factor(targets$Sample_Group)], las=2,
-          cex.names=0.8, ylim=c(0,0.002), ylab="Mean detection p-values")
-  abline(h=0.05,col="red")
-  legend("topleft", legend=levels(factor(targets$Sample_Group)), fill=pal,
+  ylabels<-colnames(detP)
+  par(mar=c(max(4.1,max(nchar(ylabels))/2.2) ,4.1 , 4.1, 2.1))
+
+  barplot(colMeans(detP), col=pal[g], las=2,
+          cex.names=0.8, ylim=c(0,max(0.002,max(colMeans(detP))*2)), main ="Mean detection p-values")
+  graphics::abline(h=0.05,col="red")
+  graphics::legend("topleft", legend=levels(g), fill=pal[1:length(levels(g))],
          bg="white")
-  color<-cols
-  barplot(colMeans(detP),
-          col=cols[factor(targets$Sample_Group)],
-          names = targets$Sample_Name,
-          las = 2, cex.names = 0.8,
-          main = "Mean detection p-values")
-  grDevices::dev.off()
+  grDevices::dev.off()()
 
   bad <- colnames(detP)[colSums(detP >=pval)/nrow(detP) > frac]
   if(length(bad)>0){
     warning("The following samples will be discarded since they fail to pass the p-value filter ( ",
             frac*100,"% of the probes with p-val >", pval, "): \n ", paste(bad,collapse = ", " ))
-    myLoad <- myLoad[,setdiff(colnames(detP),bad)]
-    }else{
+    rgSet <- rgSet[,setdiff(colnames(detP),bad)]
+  }else{
     cat("All samples passed detection P-value filter")
   }
 
   # 2. Preprocessing:
+  mSets<-list()
+  mSets[["noob"]] <- minfi::preprocessNoob(rgSet)
+  # mSets[["pq"]] <- minfi::preprocessQuantile(rgSet)
+  # mSetSqn_funn <- minfi::preprocessFunnorm(rgSet)
+  # mSetSqn_noob_pq <- minfi::preprocessQuantile(mSetSqn_noob)
+  # mSetSqn_funn_pq <- minfi::preprocessQuantile(mSetSqn_funn)
 
-  mSetSqn_noob <- minfi::preprocessNoob(myLoad)
-  mSetSqn_pq <- minfi::preprocessQuantile(myLoad)
-  mSetSqn_funn <- minfi::preprocessFunnorm(myLoad)
-  mSetSqn_noob_pq <- minfi::preprocessQuantile(mSetSqn_noob)
-  mSetSqn_funn_pq <- minfi::preprocessQuantile(mSetSqn_funn)
-
-  mSets<-list(mSetSqn_noob,mSetSqn_pq,mSetSqn_funn,mSetSqn_noob_pq,mSetSqn_funn_pq)
+  #mSets<-list(mSetSqn_noob,mSetSqn_pq,mSetSqn_funn,mSetSqn_noob_pq,mSetSqn_funn_pq)
   mSets_out<-list()
-  for (mSetSqn in mSets){
+  for (i in names(mSets)){
+    mSetSqn<-mSets[[i]]
     # 3. Removing low-quality probes (with p-value below pval)
     mSetSqn <- mSetSqn[rowSums(detP < pval) == ncol(mSetSqn),]
 
@@ -332,12 +389,12 @@ queryfy<-function(targets, myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=N
     # 6. Sex. prediction & removal
     mSetSqn$Sex_pred <- minfi::getSex(mSetSqn, cutoff = -2)$predictedSex
     if(remove_sex){
-      if(!is.null(array_type)){anno<-get_anno(arraytype)
+      if(!is.null(arraytype)){anno<-get_anno(arraytype)
       }else{
         anno<-minfi::getAnnotation(mSetSqn)
         anno<-anno[!(anno$chr %in% c("chrX","chrY")),]
       }
-      mSets_out<-append(mSets,mSetSqn[rownames(anno),])
+      mSets_out[[i]]<-mSetSqn[rownames(anno),]
     }
 
   }
@@ -346,4 +403,3 @@ queryfy<-function(targets, myLoad,frac=0.1,pval=0.01,remove_sex=TRUE,arraytype=N
   # mSetSqn <- CNV.load(mSetSqn)
   # return(mSetSqn@intensity)
 }
-

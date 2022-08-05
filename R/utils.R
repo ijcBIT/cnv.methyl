@@ -178,7 +178,7 @@ get_anno <- function(x = c("450K", "EPIC", "overlap"),anno=NULL,arraytype=NULL) 
       {  match.arg(x)
         switch(x,
                "EPIC" = anno_epic,
-               "450K" = cnv.methyl:::anno_450K,
+               "450K" = anno_450K,
                "overlap" = anno_overlap
         )
       },error=function(cond){

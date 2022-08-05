@@ -22,7 +22,8 @@ pre_process(
   copy = FALSE,
   frac = 0.1,
   pval = 0.01,
-  remove_sex = TRUE
+  remove_sex = TRUE,
+  sampGroups = NULL
 )
 
 pre_process.myLoad(
@@ -36,14 +37,24 @@ pre_process.myLoad(
 
 qc(
   rgSet,
-  sampGroups = "Sample_Group",
+  sampGroups = NULL,
   sampNames = "Sample_Name",
   qc_folder = "analysis/intermediate/QC/"
 )
 
 purify(myLoad, knn = 5)
 
-queryfy(myLoad, frac = 0.1, pval = 0.01, remove_sex = TRUE, arraytype = NULL)
+queryfy(
+  targets,
+  rgSet,
+  sampGroups = NULL,
+  sampNames = "Sample_Name",
+  frac = 0.1,
+  pval = 0.01,
+  remove_sex = TRUE,
+  arraytype = NULL,
+  qc_folder = "analysis/intermediate/QC"
+)
 }
 \arguments{
 \item{targets}{A sample sheet with the required fields for ChAMP to load files.}
@@ -81,11 +92,11 @@ Useful when working in HPC and idats are in ISILON.}
 
 \item{remove_sex}{Boolean. Should sex chromosomes be removed? default = TRUE}
 
+\item{sampGroups}{Groups for qc report & plots color category.}
+
 \item{files}{Files}
 
-\item{rgSet}{An object of class \code{RGChannelSet}.}
-
-\item{sampGroups}{Sample groups to be used for labels.}
+\item{rgSet}{Input RGChannelSet object with raw idats and metadata.}
 
 \item{sampNames}{Sample names to be used for labels.}
 

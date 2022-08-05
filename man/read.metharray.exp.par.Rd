@@ -13,7 +13,7 @@ read.metharray.exp.par(
   arraytype = NULL,
   ncores = NULL,
   extended = FALSE,
-  force = FALSE
+  force = TRUE
 )
 }
 \arguments{
@@ -44,6 +44,9 @@ Useful when working in HPC and idats are in ISILON.}
 RGset
 }
 \description{
+construct RGChannelSet in parallel using foreach
+}
+\details{
 construct RGChannelSet in parallel using foreach
 }
 \author{

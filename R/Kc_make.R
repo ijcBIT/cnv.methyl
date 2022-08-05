@@ -11,7 +11,7 @@
 #' data("ss")
 #' Kc_make(ss=ss,cncols=c("Amp","Amp10","Gains"))->a
 
-Kc_make<-function(ss,arraytype=NULL,cncols=c("Amp10","Amp","Gains","HetLoss","HomDel"),
+Kc_make<-function(ss,ID,arraytype=NULL,cncols=c("Amp10","Amp","Gains","HetLoss","HomDel"),
                   segfile_folder = "analysis/CONUMEE/Segments", anno_file=NULL, ncores=NULL,
                   log2rfile_folder = "analysis/CONUMEE/log2r", ref_genes="paper"){
   # # Check params:
@@ -76,7 +76,7 @@ Kc_make<-function(ss,arraytype=NULL,cncols=c("Amp10","Amp","Gains","HetLoss","Ho
   parallel::stopCluster(cl)
   all_scnas<-do.call("rbind",all_scnas)
    K=sapply(cols,function(x){
-     fit <-stats::lm(Var~0+I(get(x)-Int),data=all_scnas)
+     fit <-stats::lm(Var~0+I(get(x)-int),data=all_scnas)
      coeff <- unname(fit$coefficients)
      K=1/coeff
    })
