@@ -18,12 +18,12 @@
 #' @param mDiff absolute mean methylation difference between groups to filter by
 #' @param ann annotation dataset from manifest with metadata such as gene info,
 #' CGI, RefGene, etc. see topTable genelist arg.
-#' @param write.out save result as .csv default = TRUE.
+#' @param writeOut save result as .csv default = TRUE.
 #'
 #' @inheritParams limma::topTable
 #' @examples
 #'
-#' betas<-readRDS("data/betas.rds")
+#' betas<-readRDS("data/beta_noob.rds")
 #' fit<-readRDS("data/fit2.rds")
 #' ann<-readRDS("data/ann.rds")
 #' DMPann <- DMPextr(fit = fit,                       # linear contrast model

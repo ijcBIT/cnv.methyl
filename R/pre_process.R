@@ -267,7 +267,7 @@ qc <- function(rgSet,sampGroups=NULL, sampNames= "Sample_Name",qc_folder="analys
         "#FFA405", "#FFA8BB", "#426600", "#2BCE48", "#4C005C", "#00998F", "#E0FF66",
         "#740AFF", "#990000", "#FFFF80", "#FFE100", "#FF5005")
     )
-    grDevices::dev.off()()
+    grDevices::dev.off()
 
   }
   mSet <- minfi::preprocessRaw(rgSet)
@@ -277,7 +277,7 @@ qc <- function(rgSet,sampGroups=NULL, sampNames= "Sample_Name",qc_folder="analys
                  height = 7) # The height of the plot in inches
   minfi::plotQC(qc)
 
-  grDevices::dev.off()()
+  grDevices::dev.off()
 }
 #' @export
 #' @rdname pre_process
@@ -353,7 +353,7 @@ queryfy<-function(targets, rgSet,sampGroups=NULL,sampNames="Sample_Name",frac=0.
   graphics::abline(h=0.05,col="red")
   graphics::legend("topleft", legend=levels(g), fill=pal[1:length(levels(g))],
          bg="white")
-  grDevices::dev.off()()
+  grDevices::dev.off()
 
   bad <- colnames(detP)[colSums(detP >=pval)/nrow(detP) > frac]
   if(length(bad)>0){
