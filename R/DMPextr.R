@@ -59,7 +59,7 @@ DMPextr <- function(
     }
     else{
       DMP_1$Type <- "Hyper"
-      DMP_1$Type[which(DMP_1$logFC > 0)] <- "Hypo"  # invert direction (see above0)
+      DMP_1$Type[which(DMP_1$logFC < 0)] <- "Hypo"  # invert direction (see above0)
       #
       # DMP_1 <- DMP_1[ , c("chr", "pos", "strand", "Name",
       #                     "Type", "P.Value" , "adj.P.Val" ,
@@ -86,7 +86,7 @@ DMPextr <- function(
       cg         <- which(rownames(beta_normalized) %in% rownames(DMP_1))
       betas <-beta_normalized[cg,]
       # diff  _mean:
-      DMP_1$diff_meanMeth<-rowSums(apply(design,1,function(x) rowSums(betas %*% diag(x))))
+      DMP_1$diff_meanMeth<-rowSums(apply(design,1,function(x) apply(betas%*%diag(x),1,function(y)mean(y[y!=0]))))
 
       # filter for absolute methylation difference
       DMP_1 <- DMP_1[which(abs(DMP_1$diff_meanMeth)>= mDiff), ]
