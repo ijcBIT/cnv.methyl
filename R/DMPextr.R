@@ -19,6 +19,7 @@
 #' @param ann annotation dataset from manifest with metadata such as gene info,
 #' CGI, RefGene, etc. see topTable genelist arg.
 #' @param writeOut save result as .csv default = TRUE.
+#' @param writedir
 #'
 #' @inheritParams limma::topTable
 #' @examples
@@ -36,7 +37,8 @@
 
 
 DMPextr <- function(
-  fit, ContrastsDM, p.value, beta_normalized, mDiff, ann, writeOut = TRUE
+  fit, ContrastsDM=fit$contrasts, p.value, beta_normalized, mDiff, ann,
+  writedir = "analysis/DMP_", writeOut = TRUE
   ){
   ann<-data.table::as.data.table(ann,keep.rownames = "rn")
   data.table::setkey(ann,"rn")
@@ -53,7 +55,7 @@ DMPextr <- function(
                       p.value = p.value  # = p.adj
     )
 
-    if(nrow(DMP_1)==0){
+    if(nrow(DMP_1)<2){
       warning(paste("No DMP found for contrast:", ContrastsDM[i], sep=" "))
       next
     }
@@ -98,7 +100,7 @@ DMPextr <- function(
       if(writeOut == TRUE){
 
         cat(paste("writing analysis/DMP_", ContrastsDM[i], ".csv\n",sep =""))
-        data.table::fwrite(DMP_1, file = paste("analysis/DMP_", ContrastsDM[i], ".csv", sep =""))
+        data.table::fwrite(DMP_1, file = paste(writedir, ContrastsDM[i], ".csv", sep =""))
       } else {
         next
       }
