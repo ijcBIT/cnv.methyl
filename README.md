@@ -250,10 +250,12 @@ ${Amp10,Amp,Gains,Diploid,HetLoss,HomDel}$
 This information is later used by the Kc_make() function to calculate
 the Kcn constants.
 
-“SummarizedExperiment”, “S4Vectors”, “minfi”, “maxprobes”, “limma”,
-“IRanges”, “impute”, “IlluminaHumanMethylationEPICanno.ilm10b4.hg19”,
-“IlluminaHumanMethylation450kanno.ilmn12.hg19”, “GenomicRanges”,
-“conumee”, “BiocGenerics”, “Biobase”
+The resulting object is a genomic ratio set with 3 extra columns:
+
+- cna: The name of the predicted cn category.
+- cn: number of predicted copies for the gene.
+- gene.name: USCS gene names for the genes that are found in that
+  region.
 
 ### Generate Kcn values:
 
@@ -288,13 +290,6 @@ predefined categories.
 ``` r
 Kc_make(ss=ss_train,ID=ss_train$Sample_Name,cncols=c("Amp10","Amp","Gains","HetLoss","HomDel"))
 ```
-
-The resulting object is a genomic ratio set with 3 extra columns:
-
-- cna: The name of the predicted cn category.
-- cn: number of predicted copies for the gene.
-- gene.name: USCS gene names for the genes that are found in that
-  region.
 
 <!-- # Load data -->
 <!-- The recommended input format are `Mset` objects generated from raw IDAT -->
