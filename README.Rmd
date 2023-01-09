@@ -257,7 +257,11 @@ Kc_get(ID="sample_name",ss=sample_sheet,
 
 If you have your segments and log2ratio intensity files somewhere different than the default folder you should also specify where.
 
-The output is a genomic ranges object with the 
+The output is a genomic ranges object with  3 extra columns:
+
+- cna: The name of the predicted cn category.
+- cn: number of predicted copies for the gene. 
+- gene.name: USCS gene names for the genes that are found in that region.
 
 You can also calculate a new constant with your own pool of reference samples. These reference samples must be treated in the same way as the targets with unknown cnv state with the difference that the sample sheet must contain one column for each of the real copy number state for each gene. Default values are:
 
@@ -265,11 +269,7 @@ ${Amp10,Amp,Gains,Diploid,HetLoss,HomDel}$
 
 This information is later used by the Kc_make() function to calculate the Kcn constants. 
 
-The resulting object is a genomic ratio set with 3 extra columns:
 
-- cna: The name of the predicted cn category.
-- cn: number of predicted copies for the gene. 
-- gene.name: USCS gene names for the genes that are found in that region.
 
 
 ### Generate Kcn values:
