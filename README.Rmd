@@ -18,7 +18,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  eval=F
 )
 ```
 
@@ -39,6 +40,17 @@ reasons to use it are:
     although it relies on `conumee` package to calculate segmentations
     and generate log2r intensities, it can also accept input from any
     other tools.
+
+## Installation
+
+You can install the development version of cnv.methyl from
+[GitHub](https://github.com/) with:
+
+```{r}
+# install.packages("devtools")
+devtools::install_github("https://github.com/ijcBIT/cnv.methyl.git")
+```
+
 
 ## Context
 
@@ -225,14 +237,69 @@ in this functionality, please make a request.
 
 In order to remove biological and technical noise of each sample, the
 relationship between log2ratio signal and noise [tumor purity & signal
-sd] has been calculated for each copy number alteration,
-such that
+standard deviation] has been calculated for each copy number alteration,
+as described in the paper [Blecua, P et al.]@Blecua 
+
+### Predict Kcn values:
+
+A precalculated constant Kcn is used in order to adjust each cpg site log2r intensity value in a given array
+ taking into account the purity of the sample (biological noise) and the overall 
+ standard deviation of the sample (technical noise).
+ 
+There are currently 2 different sets of Constants available. 
+One calculated with the cancers proportion described in the paper ("curated") &
+one with balanced proportion of different cancers ("balanced)
+
+```{r}
+Kc_get(ID="sample_name",ss=sample_sheet,
+       Kc_method="curated")
+```
+
+If you have your segments and log2ratio intensity files somewhere different than the default folder you should also specify where.
+
+The output is a genomic ranges object with the 
+
+You can also calculate a new constant with your own pool of reference samples. These reference samples must be treated in the same way as the targets with unknown cnv state with the difference that the sample sheet must contain one column for each of the real copy number state for each gene. Default values are:
 
 ${Amp10,Amp,Gains,Diploid,HetLoss,HomDel}$
 
-A precalculated constant Kcn is used in order to adjust each array's
-purity and
+This information is later used by the Kc_make() function to calculate the Kcn constants. 
 
+"SummarizedExperiment", "S4Vectors", "minfi", "maxprobes", "limma", "IRanges", "impute", "IlluminaHumanMethylationEPICanno.ilm10b4.hg19", "IlluminaHumanMethylation450kanno.ilmn12.hg19", "GenomicRanges", "conumee", "BiocGenerics", "Biobase"
+
+### Generate Kcn values:
+
+Once the log2r ratios from the array is calculated by CONUMEE, aswell as the Segments file, the Kcn for each cn state can be  retrived as follows:
+
+For each of cn state, we perform a linear regression:
+
+$p * sd(log2[Ra]) ~ 0 + (log2[Rcn] – mean(log2[Ra]))$
+
+$y = 0 + bx , then:  B = y/x$
+
+$Kcn = 1/b → x/y$
+
+Therefore:
+
+$Kcn =(log2[Rcn] – mean(log2[Ra])) / p * sd(log2[Ra])$
+
+* mean(log2[Ra]) = the log2ratio of the whole array obtained by `conumee::CNV.fit()` 
+* log2[Rcn] = the mean log2 value for each gene of interest and cn estate.
+* p = purity calculated with Rfpurify from methylation arrays using `pre_process`
+* sd(log2[Ra]) = standard deviation of the array.
+
+Cn  are the diffrent categories of copy number a segment can have. If you want to change the defaults just specify these values on the cncols variable and generate one column in your sample sheet for each of your predefined categories.
+
+```{r}
+Kc_make(ss=ss_train,ID=ss_train$Sample_Name,cncols=c("Amp10","Amp","Gains","HetLoss","HomDel"))
+
+```
+
+The resulting object is a genomic ratio set with 3 extra columns:
+
+- cna: The name of the predicted cn category.
+- cn: number of predicted copies for the gene. 
+- gene.name: USCS gene names for the genes that are found in that region.
 
 <!-- # Load data -->
 
@@ -419,11 +486,11 @@ purity and
 <!-- For bug-reports, comments and feature requests please write to -->
 <!-- [conumee\@hovestadt.bio](mailto:conumee@hovestadt.bio). -->
 
-<!-- When using `conumee` in your work, please cite as: -->
+When using `cnv.methyl` in your work, please cite as:
 
-<!-- ```{r, echo = TRUE, collapse = TRUE, results = 'markup', warning = FALSE, message = FALSE} -->
-<!-- citation("cnv.methyl") -->
-<!-- ``` -->
+```{r, echo = TRUE, collapse = TRUE, results = 'markup', warning = FALSE, message = FALSE}
+citation("cnv.methyl")
+```
 
 <!-- # Session info -->
 
@@ -435,21 +502,13 @@ purity and
 
 <!-- # Manual: -->
 
-<!-- <!-- badges: start --> -->
+<!-- <!-- badges: start --> 
 
-<!-- <!-- badges: end --> -->
+<!-- <!-- badges: end --> 
 
 <!-- The goal of cnv.methyl is to ... -->
 
-<!-- ## Installation -->
 
-<!-- You can install the development version of cnv.methyl from -->
-<!-- [GitHub](https://github.com/) with: -->
-
-<!-- ``` r -->
-<!-- # install.packages("devtools") -->
-<!-- devtools::install_github("https://github.com/ijcBIT/cnv.methyl.git") -->
-<!-- ``` -->
 
 <!-- ## Example -->
 

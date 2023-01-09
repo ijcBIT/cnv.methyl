@@ -2,7 +2,7 @@ cnv-methyl manual: dynamic Somatic Copy Nunmber Alterations for
 methylation array data.
 ================
 Izar de Villasante
-03 May 2022
+09 January 2023
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -23,6 +23,16 @@ reasons to use it are:
     although it relies on `conumee` package to calculate segmentations
     and generate log2r intensities, it can also accept input from any
     other tools.
+
+## Installation
+
+You can install the development version of cnv.methyl from
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("https://github.com/ijcBIT/cnv.methyl.git")
+```
 
 ## Context
 
@@ -66,15 +76,6 @@ package as example data. Let’s have a look:
 ``` r
 sample_sheet<-data.table::fread(system.file("extdata", "Sample_sheet_example.csv",package="cnv.methyl"))
 str(sample_sheet)
-#> Classes 'data.table' and 'data.frame':   20 obs. of  7 variables:
-#>  $ Sample_Name : chr  "TCGA-63-A5MN-01A-22D-A27L-05" "TCGA-63-A5MP-01A-11D-A26N-05" "TCGA-63-A5MR-01A-31D-A27L-05" "TCGA-63-A5MS-01A-11D-A26N-05" ...
-#>  $ filenames   : chr  "inst/extdata/sample_IDATS/9283265144_R06C01" "inst/extdata/sample_IDATS/9305216074_R05C01" "inst/extdata/sample_IDATS/9283265144_R04C02" "inst/extdata/sample_IDATS/9305216121_R02C01" ...
-#>  $ Sample_Plate: logi  NA NA NA NA NA NA ...
-#>  $ Sample_Group: chr  "Cancer" "Cancer" "Cancer" "Cancer" ...
-#>  $ Pool_ID     : logi  NA NA NA NA NA NA ...
-#>  $ Project     : chr  "TCGA-LUSC" "TCGA-LUSC" "TCGA-LUSC" "TCGA-LUSC" ...
-#>  $ Sample_Well : logi  NA NA NA NA NA NA ...
-#>  - attr(*, ".internal.selfref")=<externalptr>
 ```
 
 This format has to be respected in order to make everything work fine.
@@ -90,101 +91,10 @@ sample_sheet$Basename<-paste0(folder, basename(sample_sheet$filenames))
 myLoad <- pre_process.myLoad(
   targets=sample_sheet,folder=folder,arraytype="450K"
   )
-#> working directory: analysis/intermediate/IDATS/
-#> Reading multiple idat-files in parallel. Using 14 cores.
-#> Minfi does load data
 ```
 
 ``` r
 myLoad
-#> Loading required package: minfi
-#> Loading required package: BiocGenerics
-#> 
-#> Attaching package: 'BiocGenerics'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     IQR, mad, sd, var, xtabs
-#> The following objects are masked from 'package:base':
-#> 
-#>     anyDuplicated, append, as.data.frame, basename, cbind, colnames,
-#>     dirname, do.call, duplicated, eval, evalq, Filter, Find, get, grep,
-#>     grepl, intersect, is.unsorted, lapply, Map, mapply, match, mget,
-#>     order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
-#>     rbind, Reduce, rownames, sapply, setdiff, sort, table, tapply,
-#>     union, unique, unsplit, which.max, which.min
-#> Loading required package: GenomicRanges
-#> Loading required package: stats4
-#> Loading required package: S4Vectors
-#> 
-#> Attaching package: 'S4Vectors'
-#> The following objects are masked from 'package:base':
-#> 
-#>     expand.grid, I, unname
-#> Loading required package: IRanges
-#> Loading required package: GenomeInfoDb
-#> Loading required package: SummarizedExperiment
-#> Loading required package: MatrixGenerics
-#> Loading required package: matrixStats
-#> 
-#> Attaching package: 'MatrixGenerics'
-#> The following objects are masked from 'package:matrixStats':
-#> 
-#>     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
-#>     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
-#>     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
-#>     colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
-#>     colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
-#>     colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
-#>     colWeightedMeans, colWeightedMedians, colWeightedSds,
-#>     colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
-#>     rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
-#>     rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
-#>     rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
-#>     rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
-#>     rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
-#>     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
-#>     rowWeightedSds, rowWeightedVars
-#> Loading required package: Biobase
-#> Welcome to Bioconductor
-#> 
-#>     Vignettes contain introductory material; view with
-#>     'browseVignettes()'. To cite Bioconductor, see
-#>     'citation("Biobase")', and for packages 'citation("pkgname")'.
-#> 
-#> Attaching package: 'Biobase'
-#> The following object is masked from 'package:MatrixGenerics':
-#> 
-#>     rowMedians
-#> The following objects are masked from 'package:matrixStats':
-#> 
-#>     anyMissing, rowMedians
-#> Loading required package: Biostrings
-#> Loading required package: XVector
-#> 
-#> Attaching package: 'Biostrings'
-#> The following object is masked from 'package:base':
-#> 
-#>     strsplit
-#> Loading required package: bumphunter
-#> Loading required package: foreach
-#> Loading required package: iterators
-#> Loading required package: parallel
-#> Loading required package: locfit
-#> locfit 1.5-9.4    2020-03-24
-#> Setting options('download.file.method.GEOquery'='auto')
-#> Setting options('GEOquery.inmemory.gpl'=FALSE)
-#> class: RGChannelSet 
-#> dim: 622399 20 
-#> metadata(0):
-#> assays(2): Green Red
-#> rownames(622399): 10600313 10600322 ... 74810490 74810492
-#> rowData names(0):
-#> colnames(20): 9283265144_R06C01 9305216074_R05C01 ... 6004791006_R06C02
-#>   6004791020_R02C02
-#> colData names(8): Sample_Name filenames ... Sample_Well Basename
-#> Annotation
-#>   array: IlluminaHumanMethylation450k
-#>   annotation: ilmn12.hg19
 ```
 
 Once data is loaded tumor purity in the sample is calculated with
@@ -204,10 +114,6 @@ Then data is normalized with `queryfy`:
 
 ``` r
 query <- queryfy(myLoad)
-#> Loading required namespace: IlluminaHumanMethylationEPICanno.ilm10b4.hg19
-#> [preprocessQuantile] Mapping to genome.
-#> [preprocessQuantile] Fixing outliers.
-#> [preprocessQuantile] Quantile normalizing.
 ```
 
 This function perforrms the following steps:
@@ -216,15 +122,14 @@ This function perforrms the following steps:
 
 2.  Filtering:
 
-    -   `minfi::detectionP()` Remove arrays: Minimum detection threshold
-        with p-value \< 0.01 per probe and a maximum of 10% failed
-        probes per sample.
+    - `minfi::detectionP()` Remove arrays: Minimum detection threshold
+      with p-value \< 0.01 per probe and a maximum of 10% failed probes
+      per sample.
 
-    -   `minfi::dropLociWithSnps()` Removes snps: probes that were
-        located +/- 10 bases away from known SNPs were also filtered
-        out.
+    - `minfi::dropLociWithSnps()` Removes snps: probes that were located
+      +/- 10 bases away from known SNPs were also filtered out.
 
-    -   `maxprobes::dropXreactiveLoci()` Remove cross reactive probes.
+    - `maxprobes::dropXreactiveLoci()` Remove cross reactive probes.
 
 You can use `pre_process()` function in order to run all these steps at
 once:
@@ -234,35 +139,6 @@ library(cnv.methyl)
 sample_sheet<-data.table::fread(system.file("extdata", "Sample_sheet_example.csv",package="cnv.methyl"))
 out="analysis/intermediate/"
 pre_process(targets = sample_sheet, out = out, RGset = F )
-#> Warning in dir.create(folder, recursive = TRUE): 'analysis/intermediate/IDATS'
-#> already exists
-#> working directory: analysis/intermediate/IDATS/
-#> Reading multiple idat-files in parallel. Using 14 cores.
-#> Minfi does load data
-#> Loading required namespace: randomForest
-#> Rfpurifies
-#> targets is saved  analysis/intermediate/
-#> Loading required namespace: IlluminaHumanMethylationEPICanno.ilm10b4.hg19
-#> [preprocessQuantile] Mapping to genome.
-#> [preprocessQuantile] Fixing outliers.
-#> [preprocessQuantile] Quantile normalizing.
-#> Pre-processing Completed successfully!
-#> class: GenomicRatioSet 
-#> dim: 422646 20 
-#> metadata(0):
-#> assays(2): M CN
-#> rownames(422646): cg16619049 cg23100540 ... cg07211220 cg02233183
-#> rowData names(0):
-#> colnames(20): 9283265144_R06C01 9305216074_R05C01 ... 6004791006_R06C02
-#>   6004791020_R02C02
-#> colData names(12): Sample_Name filenames ... yMed predictedSex
-#> Annotation
-#>   array: IlluminaHumanMethylation450k
-#>   annotation: ilmn12.hg19
-#> Preprocessing
-#>   Method: Raw (no normalization or bg correction)
-#>   minfi version: 1.38.0
-#>   Manifest version: 0.4.0
 ```
 
 ``` elixir
@@ -290,20 +166,6 @@ specifies something else:
 
 ``` r
  cnv.methyl:::control
-#> Loading required package: conumee
-#> Loading required package: IlluminaHumanMethylationEPICanno.ilm10b2.hg19
-#> 
-#> Attaching package: 'IlluminaHumanMethylationEPICanno.ilm10b2.hg19'
-#> The following objects are masked from 'package:IlluminaHumanMethylation450kanno.ilmn12.hg19':
-#> 
-#>     Islands.UCSC, Locations, Manifest, Other, SNPs.132CommonSingle,
-#>     SNPs.135CommonSingle, SNPs.137CommonSingle, SNPs.138CommonSingle,
-#>     SNPs.141CommonSingle, SNPs.142CommonSingle, SNPs.144CommonSingle,
-#>     SNPs.146CommonSingle, SNPs.147CommonSingle, SNPs.Illumina
-#> Loading required package: IlluminaHumanMethylationEPICmanifest
-#> CNV data object
-#>    created   : 
-#>   @intensity : available (25 samples, 416166 probes)
 ```
 
 Also annotation for **EPIC** , **450K** , or an overlap of both arrays
@@ -311,32 +173,8 @@ is also built-in:
 
 ``` r
 cnv.methyl:::anno_epic
-#> CNV annotation object
-#>    created  : Tue Apr 26 19:32:10 2022
-#>   @genome   : 22 chromosomes
-#>   @gap      : 313 regions
-#>   @probes   : 844316 probes
-#>   @exclude  : 10042 regions (overlapping 115308 probes)
-#>   @detail   : 94 regions (overlapping 2565 probes)
-#>   @bins     : 21937 bins (min/avg/max size: 50/91.1/5000kb, probes: 15/32.4/437)
 cnv.methyl:::anno_450K
-#> CNV annotation object
-#>    created  : Tue Apr 26 19:31:54 2022
-#>   @genome   : 22 chromosomes
-#>   @gap      : 313 regions
-#>   @probes   : 470870 probes
-#>   @exclude  : 10042 regions (overlapping 73549 probes)
-#>   @detail   : 94 regions (overlapping 1496 probes)
-#>   @bins     : 12888 bins (min/avg/max size: 50/132.4/5000kb, probes: 15/29.5/478)
 cnv.methyl:::anno_overlap
-#> CNV annotation object
-#>    created  : Tue Apr 26 19:32:22 2022
-#>   @genome   : 22 chromosomes
-#>   @gap      : 313 regions
-#>   @probes   : 439635 probes
-#>   @exclude  : 10042 regions (overlapping 68583 probes)
-#>   @detail   : 94 regions (overlapping 1403 probes)
-#>   @bins     : 12272 bins (min/avg/max size: 50/137.9/5000kb, probes: 15/28.8/432)
 ```
 
 The right annotation will be chosen in each case according to the
@@ -376,12 +214,87 @@ in this functionality, please make a request.
 
 In order to remove biological and technical noise of each sample, the
 relationship between log2ratio signal and noise \[tumor purity & signal
-sd\] has been calculated for each copy number alteration, such that
+standard deviation\] has been calculated for each copy number
+alteration, as described in the paper \[Blecua, P et al.\]@Blecua
 
-![{Amp10,Amp,Gains,Diploid,HetLoss,HomDel}](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%7BAmp10%2CAmp%2CGains%2CDiploid%2CHetLoss%2CHomDel%7D "{Amp10,Amp,Gains,Diploid,HetLoss,HomDel}")
+### Predict Kcn values:
 
-A precalculated constant Kcn is used in order to adjust each array’s
-purity and
+A precalculated constant Kcn is used in order to adjust each cpg site
+log2r intensity value in a given array taking into account the purity of
+the sample (biological noise) and the overall standard deviation of the
+sample (technical noise).
+
+There are currently 2 different sets of Constants available. One
+calculated with the cancers proportion described in the paper
+(“curated”) & one with balanced proportion of different cancers
+(“balanced)
+
+``` r
+Kc_get(ID="sample_name",ss=sample_sheet,
+       Kc_method="curated")
+```
+
+If you have your segments and log2ratio intensity files somewhere
+different than the default folder you should also specify where.
+
+The output is a genomic ranges object with the
+
+You can also calculate a new constant with your own pool of reference
+samples. These reference samples must be treated in the same way as the
+targets with unknown cnv state with the difference that the sample sheet
+must contain one column for each of the real copy number state for each
+gene. Default values are:
+
+${Amp10,Amp,Gains,Diploid,HetLoss,HomDel}$
+
+This information is later used by the Kc_make() function to calculate
+the Kcn constants.
+
+“SummarizedExperiment”, “S4Vectors”, “minfi”, “maxprobes”, “limma”,
+“IRanges”, “impute”, “IlluminaHumanMethylationEPICanno.ilm10b4.hg19”,
+“IlluminaHumanMethylation450kanno.ilmn12.hg19”, “GenomicRanges”,
+“conumee”, “BiocGenerics”, “Biobase”
+
+### Generate Kcn values:
+
+Once the log2r ratios from the array is calculated by CONUMEE, aswell as
+the Segments file, the Kcn for each cn state can be retrived as follows:
+
+For each of cn state, we perform a linear regression:
+
+$p * sd(log2[Ra]) ~ 0 + (log2[Rcn] – mean(log2[Ra]))$
+
+$y = 0 + bx , then: B = y/x$
+
+$Kcn = 1/b → x/y$
+
+Therefore:
+
+$Kcn =(log2[Rcn] – mean(log2[Ra])) / p * sd(log2[Ra])$
+
+- mean(log2\[Ra\]) = the log2ratio of the whole array obtained by
+  `conumee::CNV.fit()`
+- log2\[Rcn\] = the mean log2 value for each gene of interest and cn
+  estate.
+- p = purity calculated with Rfpurify from methylation arrays using
+  `pre_process`
+- sd(log2\[Ra\]) = standard deviation of the array.
+
+Cn are the diffrent categories of copy number a segment can have. If you
+want to change the defaults just specify these values on the cncols
+variable and generate one column in your sample sheet for each of your
+predefined categories.
+
+``` r
+Kc_make(ss=ss_train,ID=ss_train$Sample_Name,cncols=c("Amp10","Amp","Gains","HetLoss","HomDel"))
+```
+
+The resulting object is a genomic ratio set with 3 extra columns:
+
+- cna: The name of the predicted cn category.
+- cn: number of predicted copies for the gene.
+- gene.name: USCS gene names for the genes that are found in that
+  region.
 
 <!-- # Load data -->
 <!-- The recommended input format are `Mset` objects generated from raw IDAT -->
@@ -539,10 +452,13 @@ purity and
 <!-- # Contact & citation -->
 <!-- For bug-reports, comments and feature requests please write to -->
 <!-- [conumee\@hovestadt.bio](mailto:conumee@hovestadt.bio). -->
-<!-- When using `conumee` in your work, please cite as: -->
-<!-- ```{r, echo = TRUE, collapse = TRUE, results = 'markup', warning = FALSE, message = FALSE} -->
-<!-- citation("cnv.methyl") -->
-<!-- ``` -->
+
+When using `cnv.methyl` in your work, please cite as:
+
+``` r
+citation("cnv.methyl")
+```
+
 <!-- # Session info -->
 <!-- ```{r, echo = TRUE, collapse = TRUE, results = 'markup', warning = FALSE, message = FALSE} -->
 <!-- sessionInfo() -->
@@ -550,21 +466,8 @@ purity and
 <!-- # References -->
 <!-- # Manual: -->
 <!-- <!-- badges: start -->
-
-–>
-
 <!-- <!-- badges: end -->
-
-–>
-
 <!-- The goal of cnv.methyl is to ... -->
-<!-- ## Installation -->
-<!-- You can install the development version of cnv.methyl from -->
-<!-- [GitHub](https://github.com/) with: -->
-<!-- ``` r -->
-<!-- # install.packages("devtools") -->
-<!-- devtools::install_github("https://github.com/ijcBIT/cnv.methyl.git") -->
-<!-- ``` -->
 <!-- ## Example -->
 <!-- This is a basic example which shows you how to get somatic copy number -->
 <!-- alterations using the pre-calculated constant used in the paper -->
